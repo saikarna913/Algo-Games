@@ -12,16 +12,13 @@ import { GAME_REGISTRY, GamePlugin } from "../../games/registry";
 import type { NativeStackNavigationProp } from "@react-navigation/native-stack";
 
 // ── Palette ───────────────────────────────────────────────────────────────────
-// Background uses the CREAM side of the palette — warm parchment.
-// Cards are dark (#1e2535), footer is dark — so the screen has a
-// light warm field with dark "tile" cards sitting on top. High contrast,
-// very intentional, not just "another dark screen".
-const BG_BASE    = '#e8ceaa'; // slightly deeper than #f1ddbf for richness
-const BG_STRIPE  = '#dfc49e'; // darker stripe for diagonal texture
-const SLATE      = '#525e75';
-const TEAL       = '#78938a';
-const SAGE       = '#92ba92';
-const CREAM      = '#f1ddbf';
+// Everything lives in the warm cream world.
+// Background = mid-depth cream, cards = lightest cream (#faf3e8)
+// so cards feel like they lift off the surface with a natural shadow.
+const BG       = '#e8ceaa'; // parchment field
+const BG_DEEP  = '#dfc49e'; // stripe / shadow tint
+const SLATE    = '#525e75';
+const TEAL     = '#78938a';
 
 interface Props {
   navigation: NativeStackNavigationProp<any>;
@@ -52,22 +49,16 @@ export default function HomeScreen({ navigation }: Props) {
   return (
     <View style={styles.root}>
 
-      {/* ── Diagonal stripe texture ── */}
-      {/* 10 diagonal bands rendered as rotated thin Views */}
+      {/* Diagonal stripe texture — same cream family, just a touch darker */}
       <View style={styles.stripeContainer} pointerEvents="none">
-        {Array.from({ length: 18 }).map((_, i) => (
-          <View
-            key={i}
-            style={[
-              styles.stripe,
-              { top: i * 56 - 40 },
-            ]}
-          />
+        {Array.from({ length: 20 }).map((_, i) => (
+          <View key={i} style={[styles.stripe, { top: i * 52 - 40 }]} />
         ))}
       </View>
 
-      {/* ── Corner accent blobs ── */}
+      {/* Soft slate blob — top-left */}
       <View style={[styles.blob, styles.blobTL]} pointerEvents="none" />
+      {/* Soft teal blob — bottom-right */}
       <View style={[styles.blob, styles.blobBR]} pointerEvents="none" />
 
       <ScrollView
@@ -94,44 +85,41 @@ export default function HomeScreen({ navigation }: Props) {
 const styles = StyleSheet.create({
   root: {
     flex: 1,
-    backgroundColor: BG_BASE,
+    backgroundColor: BG,
   },
 
-  // ── Diagonal stripes ──────────────────────────────────────────────────────
   stripeContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
   },
   stripe: {
     position: 'absolute',
-    left: -200,
-    right: -200,
-    height: 26,
-    backgroundColor: BG_STRIPE,
-    opacity: 0.55,
-    transform: [{ rotate: '-8deg' }],
+    left: -300,
+    right: -300,
+    height: 24,
+    backgroundColor: BG_DEEP,
+    opacity: 0.45,
+    transform: [{ rotate: '-7deg' }],
   },
 
-  // ── Soft corner blobs (slate + teal tint) ────────────────────────────────
   blob: {
     position: 'absolute',
-    width: 260,
-    height: 260,
-    borderRadius: 130,
-    opacity: 0.18,
+    width: 280,
+    height: 280,
+    borderRadius: 140,
+    opacity: 0.13,
   },
   blobTL: {
-    top: -80,
-    left: -80,
+    top: -100,
+    left: -100,
     backgroundColor: SLATE,
   },
   blobBR: {
-    bottom: 60,
-    right: -80,
+    bottom: 80,
+    right: -100,
     backgroundColor: TEAL,
   },
 
-  // ── Content ───────────────────────────────────────────────────────────────
   scrollContent: {
     paddingBottom: 110,
   },
