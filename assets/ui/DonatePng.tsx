@@ -12,7 +12,7 @@ export default function DonateSVG({
   width = 150,
   height = 70,
   onPress,
-  source = require("../../assets/donate.png"), // your PNG path
+  source = require("../../assets/donate1.png"), // your PNG path
 }: DonatePngProps) {
   return (
     <Pressable

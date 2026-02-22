@@ -1,5 +1,5 @@
 // src/core/components/GlobalFooter.tsx
-// Soft Arcade footer — palette: #f1ddbf · #525e75 · #78938a · #92ba92
+// Frosted glass footer — BlurView over the parchment background
 
 import React, { useRef, useEffect } from 'react';
 import {
@@ -8,22 +8,26 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { BlurView } from 'expo-blur';
 import { useGameStore, selectCombinedScore, selectMultiplayerTotal } from '../store';
 
 // ── Palette ───────────────────────────────────────────────────────────────────
 const P = {
-  cream:  '#f1ddbf',
-  slate:  '#525e75',
-  teal:   '#78938a',
-  sage:   '#92ba92',
-  bg:     '#161d2b',
-  dark:   '#0e1117',
-  border: '#252f42',
+  cream:    '#f1ddbf',
+  slate:    '#525e75',
+  teal:     '#78938a',
+  sage:     '#92ba92',
+  ink:      '#2e3a4e',
+  muted:    '#8292ae',
+  border:   'rgba(201,169,126,0.35)',  // warm brown at low opacity
+  red:      '#b85c52',   // terracotta
+  blue:     '#4a7a9b',   // dusty blue
 };
 
-// ── Animated score that pops on change ───────────────────────────────────────
+// ── Animated score ────────────────────────────────────────────────────────────
 function AnimatedScore({ value, color }: { value: number; color: string }) {
   const scale = useRef(new Animated.Value(1)).current;
   const prev  = useRef(value);
@@ -60,7 +64,7 @@ function PulseDot({ color }: { color: string }) {
 
   return (
     <View style={styles.dotWrap}>
-      <Animated.View style={[styles.dotRing, { borderColor: color, transform: [{ scale: pulse }], opacity: 0.3 }]} />
+      <Animated.View style={[styles.dotRing, { borderColor: color, transform: [{ scale: pulse }], opacity: 0.4 }]} />
       <View style={[styles.dot, { backgroundColor: color }]} />
     </View>
   );
@@ -72,36 +76,30 @@ interface GlobalFooterProps {
 }
 
 export default function GlobalFooter({ onDonatePress }: GlobalFooterProps) {
-  const insets   = useSafeAreaInsets();
-  const playerRed  = useGameStore((s) => s.playerRed);
-  const playerBlue = useGameStore((s) => s.playerBlue);
-  const mode       = useGameStore((s) => s.mode);
+  const insets             = useSafeAreaInsets();
+  const playerRed          = useGameStore((s) => s.playerRed);
+  const playerBlue         = useGameStore((s) => s.playerBlue);
+  const mode               = useGameStore((s) => s.mode);
   const multiplayerPlayers = useGameStore((s) => s.multiplayerPlayers);
-  const combined   = useGameStore(selectCombinedScore);
-  const multiTotal = useGameStore(selectMultiplayerTotal);
-  const isMultiplayer = mode === 'multiplayer';
+  const combined           = useGameStore(selectCombinedScore);
+  const multiTotal         = useGameStore(selectMultiplayerTotal);
+  const isMultiplayer      = mode === 'multiplayer';
 
   const slideAnim = useRef(new Animated.Value(80)).current;
   useEffect(() => {
     Animated.spring(slideAnim, { toValue: 0, friction: 9, tension: 70, useNativeDriver: true }).start();
   }, []);
 
-  return (
-    <Animated.View
-      style={[
-        styles.container,
-        { paddingBottom: insets.bottom + 8, transform: [{ translateY: slideAnim }] },
-      ]}
-    >
-      {/* Top rule */}
-      <View style={styles.topRule} />
+  const content = (
+    <>
+      {/* Handle */}
+      <View style={styles.handle} />
 
       {isMultiplayer ? (
-        // ── Multiplayer ──────────────────────────────────────────────────────
         <View style={styles.row}>
           <View style={styles.chipsRow}>
             {multiplayerPlayers.slice(0, 4).map((player) => (
-              <View key={player.id} style={[styles.chip, { borderColor: player.color + '88' }]}>
+              <View key={player.id} style={[styles.chip, { borderColor: player.color + '66' }]}>
                 <View style={[styles.chipDot, { backgroundColor: player.color }]} />
                 <Text style={[styles.chipName, { color: player.color }]} numberOfLines={1}>
                   {player.name}
@@ -115,87 +113,128 @@ export default function GlobalFooter({ onDonatePress }: GlobalFooterProps) {
           </View>
           <View style={styles.totalBlock}>
             <Text style={styles.microLabel}>TOTAL</Text>
-            <AnimatedScore value={multiTotal} color={P.cream} />
+            <AnimatedScore value={multiTotal} color={P.ink} />
           </View>
         </View>
       ) : (
-        // ── Two-player ───────────────────────────────────────────────────────
         <View style={styles.row}>
 
-          {/* Red side */}
+          {/* Red */}
           <View style={styles.playerSide}>
-            <PulseDot color={P.sage} />
-            <View style={styles.playerTexts}>
-              <Text style={[styles.microLabel, { color: P.sage }]}>RED</Text>
-              <AnimatedScore value={playerRed.score} color={P.sage} />
+            <View style={[styles.playerPill, { backgroundColor: P.red + '18', borderColor: P.red + '55' }]}>
+              <PulseDot color={P.red} />
+              <View style={styles.playerTexts}>
+                <Text style={[styles.microLabel, { color: P.red }]}>RED</Text>
+                <AnimatedScore value={playerRed.score} color={P.red} />
+              </View>
             </View>
           </View>
 
           {/* Center */}
           <View style={styles.centerBlock}>
-            <View style={[styles.vDivider, { backgroundColor: P.sage + '55' }]} />
+            <View style={[styles.vDivider, { backgroundColor: P.red + '40' }]} />
             <View style={styles.centerInner}>
               <Text style={styles.microLabel}>COMBINED</Text>
-              <AnimatedScore value={combined} color={P.cream} />
-              <TouchableOpacity
-                onPress={onDonatePress}
-                style={styles.donateBtn}
-                activeOpacity={0.78}
-              >
+              <AnimatedScore value={combined} color={P.ink} />
+              <TouchableOpacity onPress={onDonatePress} style={styles.donateBtn} activeOpacity={0.78}>
                 <Text style={styles.donateBtnText}>☕ DONATE ₹10</Text>
               </TouchableOpacity>
             </View>
-            <View style={[styles.vDivider, { backgroundColor: P.teal + '55' }]} />
+            <View style={[styles.vDivider, { backgroundColor: P.blue + '40' }]} />
           </View>
 
-          {/* Blue side */}
+          {/* Blue */}
           <View style={[styles.playerSide, styles.playerSideRight]}>
-            <View style={[styles.playerTexts, { alignItems: 'flex-end' }]}>
-              <Text style={[styles.microLabel, { color: P.teal }]}>BLUE</Text>
-              <AnimatedScore value={playerBlue.score} color={P.teal} />
+            <View style={[styles.playerPill, { backgroundColor: P.blue + '18', borderColor: P.blue + '55' }]}>
+              <View style={[styles.playerTexts, { alignItems: 'flex-end' }]}>
+                <Text style={[styles.microLabel, { color: P.blue }]}>BLUE</Text>
+                <AnimatedScore value={playerBlue.score} color={P.blue} />
+              </View>
+              <PulseDot color={P.blue} />
             </View>
-            <PulseDot color={P.teal} />
           </View>
 
         </View>
       )}
+    </>
+  );
+
+  return (
+    <Animated.View
+      style={[styles.wrapper, { paddingBottom: insets.bottom + 8, transform: [{ translateY: slideAnim }] }]}
+    >
+      {/* Glass layer */}
+      <BlurView
+        intensity={55}
+        tint="light"
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Warm cream tint over the blur */}
+      <View style={styles.tintLayer} pointerEvents="none" />
+
+      {/* Top border line */}
+      <View style={styles.topBorder} pointerEvents="none" />
+
+      {/* Content sits above blur layers */}
+      <View style={styles.contentWrapper}>
+        {content}
+      </View>
     </Animated.View>
   );
 }
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     position: 'absolute',
     bottom: 0, left: 0, right: 0,
-    backgroundColor: P.bg,
-    borderTopLeftRadius: 22,
-    borderTopRightRadius: 22,
-    borderTopWidth: 1,
-    borderTopColor: P.border,
-    paddingTop: 10,
-    paddingHorizontal: 18,
-    shadowColor: P.teal,
-    shadowOffset: { width: 0, height: -6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 18,
-    elevation: 18,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    overflow: 'hidden',         // clips BlurView to rounded corners
+    paddingTop: 8,
     zIndex: 100,
+    // Subtle warm shadow
+    shadowColor: '#a07840',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.2,
+    shadowRadius: 20,
+    elevation: 20,
   },
-  topRule: {
+
+  // Warm cream wash at ~45% over the blur so it picks up the parchment palette
+  tintLayer: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(241,221,191,0.45)',
+  },
+
+  // Hairline warm-brown top edge
+  topBorder: {
+    position: 'absolute',
+    top: 0, left: 0, right: 0,
     height: 1,
-    marginHorizontal: 40,
-    marginBottom: 10,
-    backgroundColor: P.slate + '55',
-    borderRadius: 1,
+    backgroundColor: 'rgba(201,169,126,0.6)',
   },
+
+  contentWrapper: {
+    paddingHorizontal: 18,
+  },
+
+  handle: {
+    width: 36,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: 'rgba(82,94,117,0.3)',
+    alignSelf: 'center',
+    marginBottom: 10,
+  },
+
   row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
 
-  // Score digit
   scoreDigit: {
     fontSize: 28,
     fontWeight: '900',
@@ -204,52 +243,61 @@ const styles = StyleSheet.create({
   },
   microLabel: {
     fontSize: 8,
-    color: P.slate,
+    color: P.muted,
     letterSpacing: 2.5,
     fontWeight: '800',
     marginBottom: 1,
   },
 
-  // Two-player sides
   playerSide: {
     flex: 1,
+  },
+  playerSideRight: {
+    alignItems: 'flex-end',
+  },
+  playerPill: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 7,
+    borderWidth: 1,
+    borderRadius: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    alignSelf: 'flex-start',
   },
-  playerSideRight: { justifyContent: 'flex-end' },
-  playerTexts: { alignItems: 'flex-start' },
+  playerTexts: {
+    alignItems: 'flex-start',
+  },
 
-  // Center
   centerBlock: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 10,
     paddingHorizontal: 2,
   },
-  vDivider: { width: 1, height: 38, borderRadius: 1, opacity: 0.7 },
+  vDivider: { width: 1, height: 38, borderRadius: 1 },
   centerInner: { alignItems: 'center', gap: 1 },
+
   donateBtn: {
     marginTop: 4,
     borderWidth: 1,
-    borderColor: P.cream + '66',
+    borderColor: 'rgba(201,169,126,0.7)',
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 3,
+    backgroundColor: 'rgba(241,221,191,0.5)',
   },
   donateBtnText: {
     fontSize: 9,
-    color: P.cream,
+    color: P.ink,
     fontWeight: '900',
     letterSpacing: 1,
   },
 
-  // Pulse dot
   dotWrap: { width: 12, height: 12, alignItems: 'center', justifyContent: 'center' },
   dot:     { position: 'absolute', width: 7, height: 7, borderRadius: 4 },
   dotRing: { position: 'absolute', width: 12, height: 12, borderRadius: 6, borderWidth: 1.5 },
 
-  // Multiplayer chips
   chipsRow: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
   chip: {
     flexDirection: 'row',
@@ -259,16 +307,16 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 10,
     paddingVertical: 4,
-    backgroundColor: P.dark,
+    backgroundColor: 'rgba(241,221,191,0.4)',
   },
   chipDot:  { width: 6, height: 6, borderRadius: 3 },
-  chipName: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5, maxWidth: 48 },
-  emptyText: { color: P.slate, fontSize: 10, letterSpacing: 3, fontWeight: '800' },
+  chipName: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5, maxWidth: 48, color: P.ink },
+  emptyText: { color: P.muted, fontSize: 10, letterSpacing: 3, fontWeight: '800' },
   totalBlock: {
     alignItems: 'center',
     marginLeft: 10,
     paddingLeft: 10,
     borderLeftWidth: 1,
-    borderLeftColor: P.border,
+    borderLeftColor: 'rgba(201,169,126,0.4)',
   },
 });
