@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "CS Board Games",
+    "slug": "cs-board-games",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#E1E5EA"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#E1E5EA"
+      },
+      "package": "com.yourname.csboardgames",
+      "versionCode": 1,
+      "permissions": []
+    },
+    "plugins": ["expo-font"],
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}
