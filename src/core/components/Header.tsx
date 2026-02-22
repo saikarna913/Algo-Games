@@ -11,7 +11,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import LogoPng from "../../../assets/ui/LogoPng";
 import DonatePng from "../../../assets/ui/DonatePng";
 import MutePng from "../../../assets/ui/MutePng";
-import DonateModal from "../DonateModal";
+import DonateModal from "../components/DonateModal";
 
 interface HeaderProps {}
 

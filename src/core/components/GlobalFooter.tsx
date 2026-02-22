@@ -1,199 +1,274 @@
 // src/core/components/GlobalFooter.tsx
-// Fixed footer visible across all screens.
-// Shows live scores for both players + combined total.
-// Reads from global Zustand store — automatically updates when any game awards points.
+// Soft Arcade footer — palette: #f1ddbf · #525e75 · #78938a · #92ba92
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useRef, useEffect } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, FontSize, Spacing, BorderRadius, Shadow } from '../theme';
 import { useGameStore, selectCombinedScore, selectMultiplayerTotal } from '../store';
 
+// ── Palette ───────────────────────────────────────────────────────────────────
+const P = {
+  cream:  '#f1ddbf',
+  slate:  '#525e75',
+  teal:   '#78938a',
+  sage:   '#92ba92',
+  bg:     '#161d2b',
+  dark:   '#0e1117',
+  border: '#252f42',
+};
+
+// ── Animated score that pops on change ───────────────────────────────────────
+function AnimatedScore({ value, color }: { value: number; color: string }) {
+  const scale = useRef(new Animated.Value(1)).current;
+  const prev  = useRef(value);
+
+  useEffect(() => {
+    if (prev.current !== value) {
+      prev.current = value;
+      Animated.sequence([
+        Animated.spring(scale, { toValue: 1.4, useNativeDriver: true, speed: 80, bounciness: 6 }),
+        Animated.spring(scale, { toValue: 1,   useNativeDriver: true, speed: 30, bounciness: 10 }),
+      ]).start();
+    }
+  }, [value]);
+
+  return (
+    <Animated.Text style={[styles.scoreDigit, { color, transform: [{ scale }] }]}>
+      {value}
+    </Animated.Text>
+  );
+}
+
+// ── Breathing dot ─────────────────────────────────────────────────────────────
+function PulseDot({ color }: { color: string }) {
+  const pulse = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulse, { toValue: 1.7, duration: 950, useNativeDriver: true }),
+        Animated.timing(pulse, { toValue: 1,   duration: 950, useNativeDriver: true }),
+      ])
+    ).start();
+  }, []);
+
+  return (
+    <View style={styles.dotWrap}>
+      <Animated.View style={[styles.dotRing, { borderColor: color, transform: [{ scale: pulse }], opacity: 0.3 }]} />
+      <View style={[styles.dot, { backgroundColor: color }]} />
+    </View>
+  );
+}
+
+// ── Component ─────────────────────────────────────────────────────────────────
 interface GlobalFooterProps {
   onDonatePress: () => void;
 }
 
 export default function GlobalFooter({ onDonatePress }: GlobalFooterProps) {
-  const insets = useSafeAreaInsets();
-  const playerRed = useGameStore((s) => s.playerRed);
+  const insets   = useSafeAreaInsets();
+  const playerRed  = useGameStore((s) => s.playerRed);
   const playerBlue = useGameStore((s) => s.playerBlue);
-  const mode = useGameStore((s) => s.mode);
+  const mode       = useGameStore((s) => s.mode);
   const multiplayerPlayers = useGameStore((s) => s.multiplayerPlayers);
-  const combined = useGameStore(selectCombinedScore);
+  const combined   = useGameStore(selectCombinedScore);
   const multiTotal = useGameStore(selectMultiplayerTotal);
-  const resetScores = useGameStore((s) => s.resetScores);
-
   const isMultiplayer = mode === 'multiplayer';
 
+  const slideAnim = useRef(new Animated.Value(80)).current;
+  useEffect(() => {
+    Animated.spring(slideAnim, { toValue: 0, friction: 9, tension: 70, useNativeDriver: true }).start();
+  }, []);
+
   return (
-    <View style={[styles.container, { paddingBottom: insets.bottom + 4 }]}>
+    <Animated.View
+      style={[
+        styles.container,
+        { paddingBottom: insets.bottom + 8, transform: [{ translateY: slideAnim }] },
+      ]}
+    >
+      {/* Top rule */}
+      <View style={styles.topRule} />
+
       {isMultiplayer ? (
-        // ── Multiplayer Footer ────────────────────────────────────────────────
-        <View style={styles.inner}>
-          <View style={styles.multiRow}>
+        // ── Multiplayer ──────────────────────────────────────────────────────
+        <View style={styles.row}>
+          <View style={styles.chipsRow}>
             {multiplayerPlayers.slice(0, 4).map((player) => (
-              <View key={player.id} style={[styles.playerChip, { borderColor: player.color }]}>
-                <Text style={[styles.playerChipName, { color: player.color }]} numberOfLines={1}>
+              <View key={player.id} style={[styles.chip, { borderColor: player.color + '88' }]}>
+                <View style={[styles.chipDot, { backgroundColor: player.color }]} />
+                <Text style={[styles.chipName, { color: player.color }]} numberOfLines={1}>
                   {player.name}
                 </Text>
-                <Text style={[styles.playerChipScore, { color: player.color }]}>
-                  {player.score}
-                </Text>
+                <AnimatedScore value={player.score} color={player.color} />
               </View>
             ))}
             {multiplayerPlayers.length === 0 && (
-              <Text style={styles.noPlayersText}>No players yet</Text>
+              <Text style={styles.emptyText}>NO PLAYERS</Text>
             )}
           </View>
-          <View style={styles.footerRight}>
-            <Text style={styles.totalLabel}>Total</Text>
-            <Text style={styles.totalScore}>{multiTotal}</Text>
+          <View style={styles.totalBlock}>
+            <Text style={styles.microLabel}>TOTAL</Text>
+            <AnimatedScore value={multiTotal} color={P.cream} />
           </View>
         </View>
       ) : (
-        // ── Two-Player Footer ─────────────────────────────────────────────────
-        <View style={styles.inner}>
-          {/* Red player score */}
-          <View style={[styles.playerScore, styles.playerScoreRed]}>
-            <View style={[styles.playerDot, { backgroundColor: Colors.playerRed }]} />
-            <Text style={[styles.playerName, { color: Colors.playerRed }]}>Red</Text>
-            <Text style={[styles.score, { color: Colors.playerRed }]}>{playerRed.score}</Text>
+        // ── Two-player ───────────────────────────────────────────────────────
+        <View style={styles.row}>
+
+          {/* Red side */}
+          <View style={styles.playerSide}>
+            <PulseDot color={P.sage} />
+            <View style={styles.playerTexts}>
+              <Text style={[styles.microLabel, { color: P.sage }]}>RED</Text>
+              <AnimatedScore value={playerRed.score} color={P.sage} />
+            </View>
           </View>
 
-          {/* Center: combined score + donate button */}
-          <View style={styles.center}>
-            <Text style={styles.combinedLabel}>Combined</Text>
-            <Text style={styles.combinedScore}>{combined}</Text>
-            <TouchableOpacity onPress={onDonatePress} style={styles.donateBtn}>
-              <Text style={styles.donateBtnText}>☕ Donate ₹10</Text>
-            </TouchableOpacity>
+          {/* Center */}
+          <View style={styles.centerBlock}>
+            <View style={[styles.vDivider, { backgroundColor: P.sage + '55' }]} />
+            <View style={styles.centerInner}>
+              <Text style={styles.microLabel}>COMBINED</Text>
+              <AnimatedScore value={combined} color={P.cream} />
+              <TouchableOpacity
+                onPress={onDonatePress}
+                style={styles.donateBtn}
+                activeOpacity={0.78}
+              >
+                <Text style={styles.donateBtnText}>☕ DONATE ₹10</Text>
+              </TouchableOpacity>
+            </View>
+            <View style={[styles.vDivider, { backgroundColor: P.teal + '55' }]} />
           </View>
 
-          {/* Blue player score */}
-          <View style={[styles.playerScore, styles.playerScoreBlue]}>
-            <View style={[styles.playerDot, { backgroundColor: Colors.playerBlue }]} />
-            <Text style={[styles.playerName, { color: Colors.playerBlue }]}>Blue</Text>
-            <Text style={[styles.score, { color: Colors.playerBlue }]}>{playerBlue.score}</Text>
+          {/* Blue side */}
+          <View style={[styles.playerSide, styles.playerSideRight]}>
+            <View style={[styles.playerTexts, { alignItems: 'flex-end' }]}>
+              <Text style={[styles.microLabel, { color: P.teal }]}>BLUE</Text>
+              <AnimatedScore value={playerBlue.score} color={P.teal} />
+            </View>
+            <PulseDot color={P.teal} />
           </View>
+
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 
+// ─── Styles ───────────────────────────────────────────────────────────────────
 const styles = StyleSheet.create({
   container: {
     position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    backgroundColor: Colors.midnightNavy,
-    ...Shadow.lg,
-    borderTopLeftRadius: BorderRadius.md,
-    borderTopRightRadius: BorderRadius.md,
-    paddingTop: Spacing.sm,
-    paddingHorizontal: Spacing.base,
+    bottom: 0, left: 0, right: 0,
+    backgroundColor: P.bg,
+    borderTopLeftRadius: 22,
+    borderTopRightRadius: 22,
+    borderTopWidth: 1,
+    borderTopColor: P.border,
+    paddingTop: 10,
+    paddingHorizontal: 18,
+    shadowColor: P.teal,
+    shadowOffset: { width: 0, height: -6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 18,
+    elevation: 18,
     zIndex: 100,
   },
-  inner: {
+  topRule: {
+    height: 1,
+    marginHorizontal: 40,
+    marginBottom: 10,
+    backgroundColor: P.slate + '55',
+    borderRadius: 1,
+  },
+  row: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
   },
-  // ── Two-player layout ──────────────────────────────────────────────────────
-  playerScore: {
+
+  // Score digit
+  scoreDigit: {
+    fontSize: 28,
+    fontWeight: '900',
+    letterSpacing: -0.5,
+    lineHeight: 34,
+  },
+  microLabel: {
+    fontSize: 8,
+    color: P.slate,
+    letterSpacing: 2.5,
+    fontWeight: '800',
+    marginBottom: 1,
+  },
+
+  // Two-player sides
+  playerSide: {
+    flex: 1,
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 7,
   },
-  playerScoreRed: { flex: 1, alignItems: 'flex-start' },
-  playerScoreBlue: { flex: 1, alignItems: 'flex-end' },
-  playerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  playerName: {
-    fontSize: FontSize.xs,
-    fontWeight: '600',
-    letterSpacing: 0.5,
-    textTransform: 'uppercase',
-  },
-  score: {
-    fontSize: FontSize['2xl'],
-    fontWeight: 'bold',
-    lineHeight: 28,
-  },
-  center: {
+  playerSideRight: { justifyContent: 'flex-end' },
+  playerTexts: { alignItems: 'flex-start' },
+
+  // Center
+  centerBlock: {
+    flexDirection: 'row',
     alignItems: 'center',
-    gap: 2,
+    gap: 10,
+    paddingHorizontal: 2,
   },
-  combinedLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.white,
-    opacity: 0.6,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  combinedScore: {
-    fontSize: FontSize.lg,
-    fontWeight: 'bold',
-    color: Colors.white,
-  },
+  vDivider: { width: 1, height: 38, borderRadius: 1, opacity: 0.7 },
+  centerInner: { alignItems: 'center', gap: 1 },
   donateBtn: {
-    backgroundColor: Colors.deepTeal,
-    paddingHorizontal: Spacing.sm,
+    marginTop: 4,
+    borderWidth: 1,
+    borderColor: P.cream + '66',
+    borderRadius: 20,
+    paddingHorizontal: 10,
     paddingVertical: 3,
-    borderRadius: BorderRadius.full,
-    marginTop: 2,
   },
   donateBtnText: {
-    fontSize: 10,
-    color: Colors.white,
-    fontWeight: '700',
+    fontSize: 9,
+    color: P.cream,
+    fontWeight: '900',
+    letterSpacing: 1,
   },
-  // ── Multiplayer layout ─────────────────────────────────────────────────────
-  multiRow: {
-    flexDirection: 'row',
-    flex: 1,
-    gap: Spacing.xs,
-    flexWrap: 'wrap',
-  },
-  playerChip: {
+
+  // Pulse dot
+  dotWrap: { width: 12, height: 12, alignItems: 'center', justifyContent: 'center' },
+  dot:     { position: 'absolute', width: 7, height: 7, borderRadius: 4 },
+  dotRing: { position: 'absolute', width: 12, height: 12, borderRadius: 6, borderWidth: 1.5 },
+
+  // Multiplayer chips
+  chipsRow: { flex: 1, flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    borderWidth: 1.5,
-    borderRadius: BorderRadius.full,
-    paddingHorizontal: Spacing.sm,
-    paddingVertical: 2,
+    gap: 5,
+    borderWidth: 1,
+    borderRadius: 20,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    backgroundColor: P.dark,
   },
-  playerChipName: {
-    fontSize: 10,
-    fontWeight: '600',
-    maxWidth: 50,
-  },
-  playerChipScore: {
-    fontSize: FontSize.md,
-    fontWeight: 'bold',
-  },
-  noPlayersText: {
-    color: Colors.white,
-    opacity: 0.5,
-    fontSize: FontSize.sm,
-  },
-  footerRight: {
+  chipDot:  { width: 6, height: 6, borderRadius: 3 },
+  chipName: { fontSize: 10, fontWeight: '700', letterSpacing: 0.5, maxWidth: 48 },
+  emptyText: { color: P.slate, fontSize: 10, letterSpacing: 3, fontWeight: '800' },
+  totalBlock: {
     alignItems: 'center',
-    marginLeft: Spacing.sm,
-  },
-  totalLabel: {
-    fontSize: FontSize.xs,
-    color: Colors.white,
-    opacity: 0.6,
-    textTransform: 'uppercase',
-  },
-  totalScore: {
-    fontSize: FontSize.xl,
-    fontWeight: 'bold',
-    color: Colors.white,
+    marginLeft: 10,
+    paddingLeft: 10,
+    borderLeftWidth: 1,
+    borderLeftColor: P.border,
   },
 });

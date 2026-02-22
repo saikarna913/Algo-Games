@@ -13,7 +13,7 @@ import { useFonts, Pacifico_400Regular } from '@expo-google-fonts/pacifico';
 import HomeScreen from './src/core/navigation/HomeScreen';
 import GameScreen from './src/core/navigation/GameScreen';
 import GlobalFooter from './src/core/components/GlobalFooter';
-import DonationPopup from './src/core/components/DonationPopup';
+import DonationPopup from './src/core/components/DonateModal';
 import { Colors } from './src/core/theme';
 import { useGameStore } from './src/core/store';
 
