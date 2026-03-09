@@ -1,9 +1,7 @@
-// App.tsx
-// Root component. Sets up navigation, loads fonts, and renders the global footer.
 
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, Platform } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
@@ -23,6 +21,8 @@ SplashScreen.preventAutoHideAsync();
 const Stack = createNativeStackNavigator();
 
 export default function App() {
+  const navigationRef = createNavigationContainerRef();
+  const [currentRoute, setCurrentRoute] = useState<string | null>('Home');
   const [showDonationFromFooter, setShowDonationFromFooter] = useState(false);
   const setHasDonated = useGameStore((s) => s.setHasDonated);
   const setDonationPopupSeen = useGameStore((s) => s.setDonationPopupSeen);
@@ -48,7 +48,11 @@ export default function App() {
     <SafeAreaProvider>
       <StatusBar style="dark" backgroundColor={Colors.background} />
       <View style={styles.root}>
-        <NavigationContainer>
+        <NavigationContainer
+          ref={navigationRef}
+          onReady={() => setCurrentRoute(navigationRef.getCurrentRoute()?.name ?? null)}
+          onStateChange={() => setCurrentRoute(navigationRef.getCurrentRoute()?.name ?? null)}
+        >
           <Stack.Navigator
             screenOptions={{
               headerShown: false,
@@ -61,8 +65,10 @@ export default function App() {
           </Stack.Navigator>
         </NavigationContainer>
 
-        {/* Global footer is always visible — overlays navigation */}
-        <GlobalFooter onDonatePress={() => setShowDonationFromFooter(true)} />
+        {/* Global footer overlays navigation except on the Game screen */}
+        {currentRoute !== 'Game' && (
+          <GlobalFooter onDonatePress={() => setShowDonationFromFooter(true)} />
+        )}
 
         {/* Donation popup triggered from footer donate button */}
         <DonationPopup

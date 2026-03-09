@@ -62,6 +62,7 @@ export interface GameScreenProps {
 import BipartiteGame from './bipartite/BipartiteGame';
 import StonePropagationGame from './stonePropagation/StonePropagationGame';
 import ColoringGame from './Coloring/ColoringGame';
+import TicTacToeGame from './tictactoe/TicTacToeGame';
 
 // ─── Registered Games ─────────────────────────────────────────────────────────
 
@@ -145,6 +146,19 @@ export const GAME_REGISTRY: GamePlugin[] = [
     minPlayers: 2,
     implemented: false,
     component: () => null,
+  },
+
+  // ── Tic-Tac-Toe (added) ──────────────────────────────────────────────────
+  {
+    id: 'tictactoe',
+    title: 'Tic Tac Toe',
+    description: 'Classic 3×3 Tic-Tac-Toe. Claim three in a row to win.',
+    tags: ['Classic', 'Strategy'],
+    icon: '❌',
+    difficulty: 1,
+    minPlayers: 2,
+    implemented: true,
+    component: TicTacToeGame,
   },
 ];
 

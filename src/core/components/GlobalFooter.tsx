@@ -119,20 +119,20 @@ export default function GlobalFooter({ onDonatePress }: GlobalFooterProps) {
       ) : (
         <View style={styles.row}>
 
-          {/* Red */}
-          <View style={styles.playerSide}>
-            <View style={[styles.playerPill, { backgroundColor: P.red + '18', borderColor: P.red + '55' }]}>
-              <PulseDot color={P.red} />
+          {/* Blue (left) */}
+          <View style={[styles.playerSide, styles.playerSideLeft]}>
+            <View style={[styles.playerPill, { backgroundColor: P.blue + '18', borderColor: P.blue + '55' }]}>
+              <PulseDot color={P.blue} />
               <View style={styles.playerTexts}>
-                <Text style={[styles.microLabel, { color: P.red }]}>RED</Text>
-                <AnimatedScore value={playerRed.score} color={P.red} />
+                <Text style={[styles.microLabel, { color: P.blue }]}>BLUE</Text>
+                <AnimatedScore value={playerBlue.score} color={P.blue} />
               </View>
             </View>
           </View>
 
           {/* Center */}
           <View style={styles.centerBlock}>
-            <View style={[styles.vDivider, { backgroundColor: P.red + '40' }]} />
+            <View style={[styles.vDivider, { backgroundColor: P.blue + '40' }]} />
             <View style={styles.centerInner}>
               <Text style={styles.microLabel}>COMBINED</Text>
               <AnimatedScore value={combined} color={P.ink} />
@@ -140,17 +140,17 @@ export default function GlobalFooter({ onDonatePress }: GlobalFooterProps) {
                 <Text style={styles.donateBtnText}>☕ DONATE ₹10</Text>
               </TouchableOpacity>
             </View>
-            <View style={[styles.vDivider, { backgroundColor: P.blue + '40' }]} />
+            <View style={[styles.vDivider, { backgroundColor: P.red + '40' }]} />
           </View>
 
-          {/* Blue */}
+          {/* Red (right) */}
           <View style={[styles.playerSide, styles.playerSideRight]}>
-            <View style={[styles.playerPill, { backgroundColor: P.blue + '18', borderColor: P.blue + '55' }]}>
+            <View style={[styles.playerPill, { backgroundColor: P.red + '18', borderColor: P.red + '55' }]}>
               <View style={[styles.playerTexts, { alignItems: 'flex-end' }]}>
-                <Text style={[styles.microLabel, { color: P.blue }]}>BLUE</Text>
-                <AnimatedScore value={playerBlue.score} color={P.blue} />
+                <Text style={[styles.microLabel, { color: P.red }]}>RED</Text>
+                <AnimatedScore value={playerRed.score} color={P.red} />
               </View>
-              <PulseDot color={P.blue} />
+              <PulseDot color={P.red} />
             </View>
           </View>
 
@@ -232,7 +232,7 @@ const styles = StyleSheet.create({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    justifyContent: 'center',
   },
 
   scoreDigit: {
@@ -250,10 +250,13 @@ const styles = StyleSheet.create({
   },
 
   playerSide: {
-    flex: 1,
+    width: 120,
   },
   playerSideRight: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
+  },  
+  playerSideLeft: {
+    alignItems: 'center',
   },
   playerPill: {
     flexDirection: 'row',
@@ -263,7 +266,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 10,
     paddingVertical: 6,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
   },
   playerTexts: {
     alignItems: 'flex-start',

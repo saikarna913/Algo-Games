@@ -11,18 +11,18 @@
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-export type NodeColor = null | 0 | 1; // null = uncolored, 0 = red, 1 = blue
+export type NodeColor = null | 0 | 1; // null = unclaimed, 0 = red, 1 = blue
 
 export interface GraphNode {
   id: number;
   x: number; // layout position (0-1 normalized)
   y: number;
-  color: NodeColor;
 }
 
 export interface GraphEdge {
   from: number;
   to: number;
+  owner: NodeColor; // who claimed this edge
 }
 
 export interface BipartiteState {
@@ -32,7 +32,7 @@ export interface BipartiteState {
   scores: [number, number]; // [red score, blue score]
   gameOver: boolean;
   winner: 'red' | 'blue' | 'draw' | null;
-  lastMovedNode: number | null;
+  lastMovedEdge: number | null;
 }
 
 // ─── Graph Presets ────────────────────────────────────────────────────────────
@@ -86,13 +86,13 @@ export const GRAPH_PRESETS: Array<{ nodes: Omit<GraphNode, 'color'>[]; edges: Gr
 export function createInitialState(presetIndex = 0): BipartiteState {
   const preset = GRAPH_PRESETS[presetIndex % GRAPH_PRESETS.length];
   return {
-    nodes: preset.nodes.map((n) => ({ ...n, color: null })),
-    edges: [...preset.edges],
+    nodes: preset.nodes.map((n) => ({ ...n })),
+    edges: preset.edges.map((e) => ({ ...e, owner: null })),
     currentPlayer: 0,
     scores: [0, 0],
     gameOver: false,
     winner: null,
-    lastMovedNode: null,
+    lastMovedEdge: null,
   };
 }
 
@@ -110,15 +110,20 @@ export function getNeighbors(nodeId: number, edges: GraphEdge[]): number[] {
  * A move is valid if no adjacent node has the same color.
  */
 export function isValidMove(
-  nodeId: number,
+  edgeId: number,
   playerColor: NodeColor,
   nodes: GraphNode[],
   edges: GraphEdge[]
 ): boolean {
-  if (nodes[nodeId].color !== null) return false; // Already colored
+  const edge = edges[edgeId];
+  if (!edge) return false;
+  if (edge.owner !== null) return false; // already claimed
 
-  const neighbors = getNeighbors(nodeId, edges);
-  return !neighbors.some((nId) => nodes[nId].color === playerColor);
+  // A node cannot have more than one claimed edge — ensure both endpoints are free
+  const { from, to } = edge;
+  const fromTaken = edges.some((e) => e.owner !== null && (e.from === from || e.to === from));
+  const toTaken = edges.some((e) => e.owner !== null && (e.from === to || e.to === to));
+  return !fromTaken && !toTaken;
 }
 
 /**
@@ -130,26 +135,27 @@ export function getValidMoves(
   nodes: GraphNode[],
   edges: GraphEdge[]
 ): number[] {
-  return nodes
-    .filter((n) => n.color === null && isValidMove(n.id, playerColor, nodes, edges))
-    .map((n) => n.id);
+  return edges
+    .map((e, idx) => ({ e, idx }))
+    .filter(({ e, idx }) => e.owner === null && isValidMove(idx, playerColor, nodes, edges))
+    .map(({ idx }) => idx);
 }
 
 /**
  * Apply a move to the state and return the new state.
  * Does NOT mutate the original state (immutable update).
  */
-export function applyMove(state: BipartiteState, nodeId: number): BipartiteState {
+export function applyMove(state: BipartiteState, edgeId: number): BipartiteState {
   const playerColor = state.currentPlayer as NodeColor;
 
   // Validate
-  if (!isValidMove(nodeId, playerColor, state.nodes, state.edges)) {
-    return state; // Return unchanged if invalid
+  if (!isValidMove(edgeId, playerColor, state.nodes, state.edges)) {
+    return state; // invalid — return unchanged
   }
 
-  // Update nodes
-  const newNodes = state.nodes.map((n) =>
-    n.id === nodeId ? { ...n, color: playerColor } : n
+  // Claim edge
+  const newEdges = state.edges.map((e, idx) =>
+    idx === edgeId ? { ...e, owner: playerColor } : e
   );
 
   // Update scores
@@ -159,15 +165,14 @@ export function applyMove(state: BipartiteState, nodeId: number): BipartiteState
   // Switch player
   const nextPlayer = state.currentPlayer === 0 ? 1 : 0;
 
-  // Check if next player has any valid moves; if not, check current player too
-  const nextValidMoves = getValidMoves(nextPlayer as NodeColor, newNodes, state.edges);
-  const currentValidMoves = getValidMoves(playerColor, newNodes, state.edges);
+  // Determine if either player has valid moves left
+  const nextValidMoves = getValidMoves(nextPlayer as NodeColor, state.nodes, newEdges);
+  const currentValidMoves = getValidMoves(playerColor, state.nodes, newEdges);
 
   let gameOver = false;
   let winner: BipartiteState['winner'] = null;
 
   if (nextValidMoves.length === 0 && currentValidMoves.length === 0) {
-    // No moves left — game over
     gameOver = true;
     if (newScores[0] > newScores[1]) winner = 'red';
     else if (newScores[1] > newScores[0]) winner = 'blue';
@@ -176,11 +181,11 @@ export function applyMove(state: BipartiteState, nodeId: number): BipartiteState
 
   return {
     ...state,
-    nodes: newNodes,
+    edges: newEdges,
     scores: newScores,
     currentPlayer: nextPlayer as 0 | 1,
     gameOver,
     winner,
-    lastMovedNode: nodeId,
+    lastMovedEdge: edgeId,
   };
 }

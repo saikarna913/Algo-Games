@@ -43,7 +43,7 @@ const PLAYER_LABELS = { 0: 'Red', 1: 'Blue' };
 export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenProps) {
   const [state, setState] = useState<BipartiteState>(() => createInitialState(0));
   const [selectedPreset, setSelectedPreset] = useState(0);
-  const [invalidFlash, setInvalidFlash] = useState<number | null>(null);
+  const [invalidFlash, setInvalidFlash] = useState<number | null>(null); // holds edge id when invalid
   const addScore = useGameStore((s) => s.addScore);
 
   // Animated value for the turn indicator pulse
@@ -58,32 +58,28 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
   }, [pulseAnim]);
 
   // ── Handle node press ───────────────────────────────────────────────────────
-  const handleNodePress = useCallback(
-    (nodeId: number) => {
+  const handleEdgePress = useCallback(
+    (edgeId: number) => {
       if (state.gameOver) return;
 
       const playerColor = state.currentPlayer;
-      const valid = isValidMove(nodeId, playerColor, state.nodes, state.edges);
+      const valid = isValidMove(edgeId, playerColor, state.nodes, state.edges);
 
       if (!valid) {
-        // Flash the node to show invalid move
-        setInvalidFlash(nodeId);
+        setInvalidFlash(edgeId);
         setTimeout(() => setInvalidFlash(null), 500);
         return;
       }
 
-      const newState = applyMove(state, nodeId);
+      const newState = applyMove(state, edgeId);
       setState(newState);
       pulseTurnIndicator();
 
-      // Game over — update global scores and notify parent
       if (newState.gameOver && newState.winner) {
         if (newState.winner !== 'draw') {
           addScore(newState.winner as 'red' | 'blue', 1);
         }
-        setTimeout(() => {
-          onGameEnd(newState.winner!);
-        }, 800);
+        setTimeout(() => onGameEnd(newState.winner!), 800);
       }
     },
     [state, addScore, onGameEnd, pulseTurnIndicator]
@@ -112,6 +108,29 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
         {state.edges.map((edge, idx) => {
           const from = state.nodes[edge.from];
           const to = state.nodes[edge.to];
+          const isValid = validMoves.includes(idx);
+          const isLastMoved = state.lastMovedEdge === idx;
+          const isFlashing = invalidFlash === idx;
+
+          let stroke = Colors.border;
+          let strokeWidth = 2;
+          let dash: string | undefined = undefined;
+
+          if (edge.owner === 0) {
+            stroke = PLAYER_COLORS[0];
+            strokeWidth = 4;
+          } else if (edge.owner === 1) {
+            stroke = PLAYER_COLORS[1];
+            strokeWidth = 4;
+          } else if (isFlashing) {
+            stroke = Colors.error;
+            strokeWidth = 3.5;
+          } else if (isValid) {
+            stroke = Colors.lightBlue;
+            strokeWidth = 3;
+            dash = '6 4';
+          }
+
           return (
             <Line
               key={`edge-${idx}`}
@@ -119,8 +138,11 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
               y1={from.y * GRAPH_SIZE}
               x2={to.x * GRAPH_SIZE}
               y2={to.y * GRAPH_SIZE}
-              stroke={Colors.border}
-              strokeWidth={2}
+              stroke={stroke}
+              strokeWidth={strokeWidth}
+              strokeDasharray={dash}
+              opacity={isLastMoved ? 0.95 : 1}
+              onPress={() => handleEdgePress(idx)}
             />
           );
         })}
@@ -129,53 +151,31 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
         {state.nodes.map((node) => {
           const cx = node.x * GRAPH_SIZE;
           const cy = node.y * GRAPH_SIZE;
-          const isValid = validMoves.includes(node.id);
-          const isLastMoved = state.lastMovedNode === node.id;
-          const isFlashing = invalidFlash === node.id;
+          const matched = state.edges.some((e) => e.owner !== null && (e.from === node.id || e.to === node.id));
+          const isLastTouched =
+            state.lastMovedEdge !== null &&
+            (state.edges[state.lastMovedEdge].from === node.id || state.edges[state.lastMovedEdge].to === node.id);
 
-          // Determine fill color
-          let fillColor = Colors.nodeEmpty;
-          if (node.color === 0) fillColor = Colors.playerRed;
-          else if (node.color === 1) fillColor = Colors.playerBlue;
-          else if (isFlashing) fillColor = Colors.error;
-          else if (isValid) fillColor = Colors.lightBlue;
+          const fillColor = matched ? Colors.nodeOccupied : Colors.nodeEmpty;
 
           return (
             <React.Fragment key={`node-${node.id}`}>
-              {/* Outer ring for valid/last-moved highlight */}
-              {(isValid || isLastMoved) && (
-                <Circle
-                  cx={cx}
-                  cy={cy}
-                  r={NODE_RADIUS + 5}
-                  fill="none"
-                  stroke={isLastMoved ? Colors.deepTeal : Colors.coastalBlue}
-                  strokeWidth={2}
-                  strokeDasharray={isValid ? '4 3' : undefined}
-                  opacity={0.7}
-                />
-              )}
-
-              {/* Main node circle */}
               <Circle
                 cx={cx}
                 cy={cy}
                 r={NODE_RADIUS}
                 fill={fillColor}
-                stroke={isLastMoved ? Colors.deepTeal : Colors.midnightNavy}
-                strokeWidth={isLastMoved ? 2.5 : 1.5}
-                onPress={() => handleNodePress(node.id)}
+                stroke={isLastTouched ? Colors.deepTeal : Colors.midnightNavy}
+                strokeWidth={isLastTouched ? 2.5 : 1.5}
               />
 
-              {/* Node ID label */}
               <SvgText
                 x={cx}
                 y={cy + 5}
                 textAnchor="middle"
-                fill={node.color !== null ? Colors.white : Colors.midnightNavy}
+                fill={matched ? Colors.white : Colors.midnightNavy}
                 fontSize={12}
                 fontWeight="bold"
-                onPress={() => handleNodePress(node.id)}
               >
                 {node.id}
               </SvgText>
@@ -299,8 +299,8 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
       <View style={styles.rules}>
         <Text style={styles.rulesTitle}>📖 Rules</Text>
         <Text style={styles.rulesText}>
-          Alternate turns coloring nodes. You cannot color a node the same color as any of its
-          neighbors — this maintains the bipartite property. The player who colors more nodes wins!
+          Alternate turns claiming unclaimed edges. A node cannot be incident to more than one
+          claimed edge. Whoever claims the most edges (largest matching) wins!
         </Text>
       </View>
     </ScrollView>

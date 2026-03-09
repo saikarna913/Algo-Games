@@ -3,7 +3,8 @@
 // This file never changes when new games are added — it's purely a shell.
 
 import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, Alert } from 'react-native';
+import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Colors, FontSize, Spacing } from '../theme';
 import { useGameStore } from '../store';
 import { getGameById } from '../../games/registry';
@@ -21,11 +22,12 @@ interface Props {
 }
 
 export default function GameScreen({ navigation, route }: Props) {
+  const insets = useSafeAreaInsets();
   const { gameId, mode } = route.params;
   const addScore = useGameStore((s) => s.addScore);
   const setActiveGame = useGameStore((s) => s.setActiveGame);
 
-  // Look up game in registry
+  // Look up game in registry (kept for reference but not rendered here)
   const game = getGameById(gameId);
 
   // ── Handle game end ───────────────────────────────────────────────────────
@@ -69,15 +71,33 @@ export default function GameScreen({ navigation, route }: Props) {
     );
   }
 
-  // ── Render game component ─────────────────────────────────────────────────
-  const GameComponent = game.component;
+  // Render header + the selected game component
+  const GameComponent = game?.component;
+
   return (
-    <View style={styles.container}>
-      <GameComponent
-        mode={mode}
-        onGameEnd={handleGameEnd}
-        onExit={handleExit}
-      />
+    <View style={[styles.container, { paddingTop: insets.top + 12 }]}> 
+      {/* Decorative orbs to match HomeScreen */}
+      <View style={[styles.orb, styles.orbTopLeft]} pointerEvents="none" />
+      <View style={[styles.orb, styles.orbTopRight]} pointerEvents="none" />
+      <View style={[styles.orb, styles.orbMid]} pointerEvents="none" />
+      <View style={[styles.orb, styles.orbBottom]} pointerEvents="none" />
+
+      <View style={styles.headerRow}>
+        <TouchableOpacity onPress={handleExit} style={styles.backBtn}>
+          <Text style={styles.backText}>← Back</Text>
+        </TouchableOpacity>
+      </View>
+
+      {GameComponent ? (
+        <View style={{ flex: 1, width: '100%' }}>
+          <GameComponent mode={mode} onGameEnd={handleGameEnd} onExit={handleExit} />
+        </View>
+      ) : (
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorEmoji}>🕹️</Text>
+          <Text style={styles.errorText}>Game "{gameId}" not found.</Text>
+        </View>
+      )}
     </View>
   );
 }
@@ -85,7 +105,61 @@ export default function GameScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#e8ceaa',
+  },
+  // Decorative orbs (copied from HomeScreen)
+  orb: {
+    position: 'absolute',
+    borderRadius: 9999,
+  },
+  orbTopLeft: {
+    width: 420,
+    height: 420,
+    top: -180,
+    left: -160,
+    backgroundColor: '#525e75',
+    opacity: 0.14,
+  },
+  orbTopRight: {
+    width: 340,
+    height: 340,
+    top: -100,
+    right: -120,
+    backgroundColor: '#92ba92',
+    opacity: 0.18,
+  },
+  orbMid: {
+    width: 300,
+    height: 300,
+    top: '38%',
+    left: -140,
+    backgroundColor: '#78938a',
+    opacity: 0.13,
+  },
+  orbBottom: {
+    width: 380,
+    height: 380,
+    bottom: -140,
+    right: -130,
+    backgroundColor: '#525e75',
+    opacity: 0.11,
+  },
+
+  headerRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-start',
+    paddingHorizontal: 20,
+    marginBottom: 20,
+  },
+  backBtn: {
+    paddingVertical: 8,
+    paddingHorizontal: 10,
+  },
+  backText: {
+    fontSize: FontSize.md,
+    fontWeight: '700',
+    color: Colors.midnightNavy,
   },
   errorContainer: {
     flex: 1,
