@@ -128,23 +128,29 @@ function PortalOverlay({ game, visible, onClose, onNavigate }: PortalProps) {
         </View>
 
         <Animated.View style={{ transform: [{ translateY: titleSlide }], opacity: titleFade, alignItems: 'center' }}>
-          <Text style={[styles.portalTitle, { color: a.dark }]}>
+          <Text style={[styles.portalTitle, { color: a.dark }]}> 
             {game.title.toUpperCase()}
           </Text>
-          <Text style={[styles.portalDifficulty, { color: a.accent }]}>
+          <Text style={[styles.portalDifficulty, { color: a.accent }]}> 
             {'■'.repeat(game.difficulty ?? 1)}{'□'.repeat(Math.max(0, 3 - (game.difficulty ?? 1)))}
             {'  '}DIFFICULTY
           </Text>
         </Animated.View>
 
         <Animated.View style={{ opacity: titleFade, width: '100%', marginTop: 10 }}>
-          <TouchableOpacity
-            style={[styles.playBtn, { backgroundColor: a.accent, shadowColor: a.accent }]}
-            onPress={() => { handleClose(); setTimeout(() => onNavigate(game), 220); }}
-            activeOpacity={0.82}
-          >
-            <Text style={styles.playBtnText}>► PLAY</Text>
-          </TouchableOpacity>
+          {game.implemented ? (
+            <TouchableOpacity
+              style={[styles.playBtn, { backgroundColor: a.accent, shadowColor: a.accent }]}
+              onPress={() => { handleClose(); setTimeout(() => onNavigate(game), 220); }}
+              activeOpacity={0.82}
+            >
+              <Text style={styles.playBtnText}>► PLAY</Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={[styles.playBtnDisabled, { backgroundColor: '#f0f0f0' }]}> 
+              <Text style={[styles.playBtnText, { color: '#777' }]}>COMING SOON</Text>
+            </View>
+          )}
 
           <TouchableOpacity onPress={handleClose} style={styles.backBtn}>
             <Text style={styles.backText}>← BACK</Text>
@@ -200,10 +206,9 @@ export default function GameCard({ game, onPress, style }: GameCardProps) {
       <Animated.View style={[{ transform: [{ scale: scaleAnim }] }, style]}>
         <TouchableOpacity
           activeOpacity={1}
-          onPress={() => game.implemented && setPortalVisible(true)}
+          onPress={() => setPortalVisible(true)}
           onPressIn={handlePressIn}
           onPressOut={handlePressOut}
-          disabled={!game.implemented}
         >
           <Animated.View
             style={[
@@ -354,6 +359,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     shadowOffset: { width: 0, height: 4 },
     shadowRadius: 10, shadowOpacity: 0.4, elevation: 6,
+  },
+  playBtnDisabled: {
+    borderRadius: 12,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   playBtnText: { color: '#fff', fontWeight: '900', fontSize: 14, letterSpacing: 3 },
   backBtn: { marginTop: 14, alignItems: 'center', paddingVertical: 6 },

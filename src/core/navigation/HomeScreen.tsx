@@ -32,7 +32,8 @@ export default function HomeScreen({ navigation }: Props) {
     [navigation, mode]
   );
 
-  const visibleGames = GAME_REGISTRY.filter((g) => g.implemented);
+  // Show all games on the home screen (including coming-soon entries)
+  const visibleGames = GAME_REGISTRY;
 
   const MIN_CARD_WIDTH = 160;
   const GRID_PADDING   = 32;
