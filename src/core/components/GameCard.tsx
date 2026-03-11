@@ -11,6 +11,7 @@ import {
   Easing,
   Modal,
   Dimensions,
+  useWindowDimensions,
 } from 'react-native';
 import type { GamePlugin } from '../../games/registry';
 
@@ -57,6 +58,10 @@ function PortalOverlay({ game, visible, onClose, onNavigate }: PortalProps) {
   const titleFade  = useRef(new Animated.Value(0)).current;
   const a = getAccent(game);
 
+  const { width: winW, height: winH } = useWindowDimensions();
+  const PORTAL_W = 310;
+  const PORTAL_H_HALF = 230; // half of the visual portal height used previously
+
   React.useEffect(() => {
     if (!visible) return;
     scaleAnim.setValue(0); fadeAnim.setValue(0); bgAnim.setValue(0);
@@ -100,6 +105,8 @@ function PortalOverlay({ game, visible, onClose, onNavigate }: PortalProps) {
             shadowColor: a.accent,
             opacity: fadeAnim,
             transform: [{ scale: scaleAnim }],
+            top: winH / 2 - PORTAL_H_HALF,
+            left: winW / 2 - PORTAL_W / 2,
           },
         ]}
       >

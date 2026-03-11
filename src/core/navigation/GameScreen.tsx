@@ -1,15 +1,21 @@
 // src/core/navigation/GameScreen.tsx
-// Container screen that loads any game from the registry by ID.
-// This file never changes when new games are added — it's purely a shell.
-
-import React, { useCallback } from 'react';
-import { View, Text, StyleSheet, Alert, TouchableOpacity } from 'react-native';
+import React, { useCallback, useState } from 'react';
+import { View, Text, StyleSheet, Alert, Animated } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, FontSize, Spacing } from '../theme';
 import { useGameStore } from '../store';
 import { getGameById } from '../../games/registry';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import type { RouteProp } from '@react-navigation/native';
+
+// ── Palette ───────────────────────────────────────────────────────────────────
+const P = {
+  creamDk:   '#e8ceaa',
+  bluePlayer: '#2980b9',   // coastal blue for player 1 (O / Blue)
+redPlayer:  '#b84c2e',
+redBg:      '#eeddd3',   // very light red tint for background
+  blueBg:     '#d6e8f5',   // very light blue tint for background
+  neutralBg:  '#e8ceaa',   // default cream
+};
 
 type RootStackParamList = {
   Home: undefined;
@@ -24,24 +30,18 @@ interface Props {
 export default function GameScreen({ navigation, route }: Props) {
   const insets = useSafeAreaInsets();
   const { gameId, mode } = route.params;
-  const addScore = useGameStore((s) => s.addScore);
+  const addScore   = useGameStore((s) => s.addScore);
   const setActiveGame = useGameStore((s) => s.setActiveGame);
 
-  // Look up game in registry (kept for reference but not rendered here)
+  // currentPlayer: 0 = Red, 1 = Blue — games can call setCurrentPlayer via a prop
+  const [currentPlayer, setCurrentPlayer] = useState<0 | 1>(0);
+
   const game = getGameById(gameId);
 
-  
-
-  // ── Handle game end ───────────────────────────────────────────────────────
   const handleGameEnd = useCallback(
     (winner: string) => {
       setActiveGame(null);
-
-      // Default scoring: winner gets 1 point
-      if (game?.onGameEnd) {
-        game.onGameEnd(winner as 'red' | 'blue', addScore);
-      }
-      // Note: individual games also call addScore directly for more control
+      if (game?.onGameEnd) game.onGameEnd(winner as 'red' | 'blue', addScore);
 
       Alert.alert(
         winner === 'draw' ? '🤝 Draw!' : `🎉 ${winner.charAt(0).toUpperCase() + winner.slice(1)} Wins!`,
@@ -49,8 +49,8 @@ export default function GameScreen({ navigation, route }: Props) {
           ? "It's a tie! Brilliant play from both sides."
           : `Congratulations ${winner}! Great game!`,
         [
-          { text: '🔄 Play Again', onPress: () => handlePlayAgain() },
-          { text: '🏠 Home', onPress: () => navigation.goBack() },
+          { text: '🔄 Play Again', onPress: () => gameRef.current?.reset() },
+          { text: '🏠 Home',       onPress: () => navigation.goBack()       },
         ]
       );
     },
@@ -62,86 +62,43 @@ export default function GameScreen({ navigation, route }: Props) {
     navigation.goBack();
   }, [navigation, setActiveGame]);
 
-  // ── Error state: game not found ───────────────────────────────────────────
   if (!game) {
     return (
-      <View style={styles.errorContainer}>
+      <View style={styles.error}>
         <Text style={styles.errorEmoji}>🕹️</Text>
-        <Text style={styles.errorText}>Game "{gameId}" not found in registry.</Text>
-        <Text style={styles.errorSub}>Did you register it in src/games/registry.ts?</Text>
+        <Text style={styles.errorTitle}>Game "{gameId}" not found.</Text>
+        <Text style={styles.errorSub}>Register it in src/games/registry.ts</Text>
       </View>
     );
   }
 
-  // Render header + the selected game component (clean, neutral background)
-  const GameComponent = game?.component;
+  const GameComponent = game.component as any;
   const gameRef = React.useRef<any>(null);
 
-  const handlePlayAgain = () => {
-    if (gameRef.current && typeof gameRef.current.reset === 'function') {
-      gameRef.current.reset();
-    }
-  };
+  // Dynamic background based on active player
+  const bgColor = currentPlayer === 0 ? P.redBg : P.blueBg;
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 8 }]}> 
-      {GameComponent ? (
-        <View style={{ flex: 1, width: '100%' }}>
-          {(() => {
-            const Comp: any = GameComponent as any;
-            return <Comp ref={gameRef} mode={mode} showHeader={true} onGameEnd={handleGameEnd} onExit={handleExit} />;
-          })()}
-        </View>
-      ) : (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorEmoji}>🕹️</Text>
-          <Text style={styles.errorText}>Game "{gameId}" not found.</Text>
-        </View>
+    <View style={[styles.container, { paddingTop: insets.top, backgroundColor: bgColor }]}>
+      {GameComponent && (
+        <GameComponent
+          ref={gameRef}
+          mode={mode}
+          showHeader={true}
+          onGameEnd={handleGameEnd}
+          onExit={handleExit}
+          onPlayerChange={(p: 0 | 1) => setCurrentPlayer(p)}  // games call this on each move
+          accentColor={currentPlayer === 0 ? P.redPlayer : P.bluePlayer}
+        />
       )}
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: Colors.background,
-  },
-
-  headerRow: {
-    width: '100%',
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'flex-start',
-    paddingHorizontal: 20,
-    paddingVertical: Spacing.sm,
-  },
-  backBtn: {
-    paddingRight: Spacing.md,
-  },
-  backText: {
-    fontSize: FontSize.md,
-    fontWeight: '700',
-    color: Colors.coastalBlue,
-  },
-  errorContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    padding: Spacing['2xl'],
-    backgroundColor: Colors.background,
-  },
-  errorEmoji: { fontSize: 48, marginBottom: Spacing.base },
-  errorText: {
-    fontSize: FontSize.lg,
-    fontWeight: '700',
-    color: Colors.midnightNavy,
-    textAlign: 'center',
-    marginBottom: Spacing.sm,
-  },
-  errorSub: {
-    fontSize: FontSize.md,
-    color: Colors.textSecondary,
-    textAlign: 'center',
-  },
+  container: { flex: 1 },
+  error: { flex: 1, justifyContent: 'center', alignItems: 'center', padding: 32, backgroundColor: '#e8ceaa' },
+  errorEmoji: { fontSize: 48, marginBottom: 12 },
+  errorTitle: { fontSize: 18, fontWeight: '700', color: '#2e3a4e', textAlign: 'center', marginBottom: 6 },
+  errorSub:   { fontSize: 14, color: '#8292ae', textAlign: 'center' },
 });

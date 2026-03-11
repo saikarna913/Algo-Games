@@ -7,8 +7,6 @@
 //   2. Implement the GamePlugin interface in yourGame/index.tsx
 //   3. Import and add it to the GAME_REGISTRY array below.
 //   4. That's it! The home screen and navigation auto-detect it.
-//
-// Never modify HomeScreen, navigation, or scoring logic to add a game.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import React from 'react';
@@ -58,17 +56,22 @@ export interface GameScreenProps {
   showHeader?: boolean;
 }
 
-// ─── Lazy-load game components ────────────────────────────────────────────────
-// Using require() to avoid circular imports and allow tree-shaking.
+// ─── Game component imports ───────────────────────────────────────────────────
 
 import BipartiteGame from './bipartite/BipartiteGame';
 import StonePropagationGame from './stonePropagation/StonePropagationGame';
 import ColoringGame from './Coloring/ColoringGame';
 import TicTacToeGame from './tictactoe/TicTacToeGame';
 
+// ── New CS games ──────────────────────────────────────────────────────────────
+import BinaryBattleGame from './binaryBattle/BinaryBattleGame';
+import StackAttackGame from './stackAttack/StackAttackGame';
+import SortWarsGame from './sortWars/SortWarsGame';
+
 // ─── Registered Games ─────────────────────────────────────────────────────────
 
 export const GAME_REGISTRY: GamePlugin[] = [
+
   // ── Game 1: Bipartite Graph Coloring ──────────────────────────────────────
   {
     id: 'bipartite',
@@ -96,18 +99,85 @@ export const GAME_REGISTRY: GamePlugin[] = [
     implemented: true,
     component: StonePropagationGame,
   },
+
+  // ── Game 3: Graph Coloring ────────────────────────────────────────────────
   {
-  id: 'graphColoring',
-  title: 'Graph Coloring',
-  description:
-    'Compete to color nodes without violating adjacency constraints. Explore k-coloring, complex graphs, and strategic play.',
-  tags: ['Graph Theory', 'Coloring', 'NP-Complete'],
-  icon: '🎨',
-  difficulty: 3,
-  minPlayers: 2,
-  implemented: true,
-  component: ColoringGame,
-},
+    id: 'graphColoring',
+    title: 'Graph Coloring',
+    description:
+      'Compete to color nodes without violating adjacency constraints. Explore k-coloring, complex graphs, and strategic play.',
+    tags: ['Graph Theory', 'Coloring', 'NP-Complete'],
+    icon: '🎨',
+    difficulty: 3,
+    minPlayers: 2,
+    implemented: true,
+    component: ColoringGame,
+  },
+
+  // ── Game 4: Tic-Tac-Toe ───────────────────────────────────────────────────
+  {
+    id: 'tictactoe',
+    title: 'Tic Tac Toe',
+    description: 'Classic 3×3 Tic-Tac-Toe. Claim three in a row to win.',
+    tags: ['Classic', 'Strategy'],
+    icon: '❌',
+    difficulty: 1,
+    minPlayers: 2,
+    implemented: true,
+    component: TicTacToeGame,
+  },
+
+  // ── Game 5: Binary Battle ─────────────────────────────────────────────────
+  {
+    id: 'binaryBattle',
+    title: 'Binary Battle',
+    description:
+      'Convert decimal numbers to binary by toggling bit buttons. Race your opponent across 10 rounds — streaks earn bonus points!',
+    tags: ['Binary', 'Number Systems', 'Bitwise'],
+    icon: '💻',
+    difficulty: 1,
+    minPlayers: 2,
+    implemented: true,
+    component: BinaryBattleGame,
+    onGameEnd: (winner, addScore) => {
+      if (winner === 'red' || winner === 'blue') addScore(winner, 1);
+    },
+  },
+
+  // ── Game 6: Stack Attack ──────────────────────────────────────────────────
+  {
+    id: 'stackAttack',
+    title: 'Stack Attack',
+    description:
+      'Push and pop from a shared stack. Score by popping your own items — but trigger overflow or underflow and lose a point!',
+    tags: ['Data Structures', 'Stack', 'LIFO'],
+    icon: '📚',
+    difficulty: 2,
+    minPlayers: 2,
+    implemented: true,
+    component: StackAttackGame,
+    onGameEnd: (winner, addScore) => {
+      if (winner === 'red' || winner === 'blue') addScore(winner, 1);
+    },
+  },
+
+  // ── Game 7: Sort Wars ─────────────────────────────────────────────────────
+  {
+    id: 'sortWars',
+    title: 'Sort Wars',
+    description:
+      'Swap adjacent elements to sort a shared array. Good swaps score points — collaborate and compete to finish the sort!',
+    tags: ['Sorting', 'Bubble Sort', 'Algorithms'],
+    icon: '📊',
+    difficulty: 1,
+    minPlayers: 2,
+    implemented: true,
+    component: SortWarsGame,
+    onGameEnd: (winner, addScore) => {
+      if (winner === 'red' || winner === 'blue') addScore(winner, 1);
+    },
+  },
+
   // ── Coming Soon: Spanning Tree ────────────────────────────────────────────
   {
     id: 'spanningTree',
@@ -117,20 +187,6 @@ export const GAME_REGISTRY: GamePlugin[] = [
     tags: ['Graph Theory', 'MST', 'Greedy'],
     icon: '🌳',
     difficulty: 2,
-    minPlayers: 2,
-    implemented: false,
-    component: () => null,
-  },
-
-  // ── Coming Soon: Sorting Duel ─────────────────────────────────────────────
-  {
-    id: 'sortingDuel',
-    title: 'Sorting Duel',
-    description:
-      'Race to sort an array using limited swap moves. Who knows their algorithms better?',
-    tags: ['Sorting', 'Algorithms', 'Arrays'],
-    icon: '📊',
-    difficulty: 1,
     minPlayers: 2,
     implemented: false,
     component: () => null,
@@ -150,18 +206,6 @@ export const GAME_REGISTRY: GamePlugin[] = [
     component: () => null,
   },
 
-  // ── Tic-Tac-Toe (added) ──────────────────────────────────────────────────
-  {
-    id: 'tictactoe',
-    title: 'Tic Tac Toe',
-    description: 'Classic 3×3 Tic-Tac-Toe. Claim three in a row to win.',
-    tags: ['Classic', 'Strategy'],
-    icon: '❌',
-    difficulty: 1,
-    minPlayers: 2,
-    implemented: true,
-    component: TicTacToeGame,
-  },
 ];
 
 // ─── Helper utilities ─────────────────────────────────────────────────────────
