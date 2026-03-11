@@ -100,12 +100,12 @@ export default function DonateModal({ visible, onClose }: DonateModalProps) {
           <View style={[styles.corner, styles.cornerBR]} />
 
           {/* Close button */}
-          <Pressable
+         {/* <Pressable
             onPress={handleClose}
             style={({ pressed }) => [styles.closeBtn, pressed && styles.pressed]}
           >
             <Text style={styles.closeBtnText}>✕</Text>
-          </Pressable>
+          </Pressable>*/}
 
           {/* Icon ring — mirrors GameCard portal glow ring */}
           <View style={styles.iconRing}>
@@ -194,7 +194,7 @@ const styles = StyleSheet.create({
   cornerBR: { bottom: 12, right: 12, borderLeftWidth: 0, borderTopWidth: 0 },
 
   // Close button
-  closeBtn: {
+  /*closeBtn: {
     position: 'absolute',
     top: 14, right: 14,
     width: 30, height: 30,
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
     fontWeight: '900',
     color: P.slateLt,
     lineHeight: 14,
-  },
+  },*/
 
   // Icon ring — mirrors GameCard glow ring
   iconRing: {

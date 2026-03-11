@@ -1,7 +1,12 @@
 import React, { useEffect } from 'react';
 import { View, Text, ActivityIndicator, StyleSheet } from 'react-native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
-export default function LoadingScreen({ navigation }) {
+interface Props {
+  navigation: NativeStackNavigationProp<any>;
+}
+
+export default function LoadingScreen({ navigation }: Props) {
   useEffect(() => {
     const timer = setTimeout(() => {
       navigation.replace('Home');

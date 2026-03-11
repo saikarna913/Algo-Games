@@ -26,6 +26,9 @@ export default function App() {
   const [showDonationFromFooter, setShowDonationFromFooter] = useState(false);
   const setHasDonated = useGameStore((s) => s.setHasDonated);
   const setDonationPopupSeen = useGameStore((s) => s.setDonationPopupSeen);
+  const loadDonationState = useGameStore((s) => s.loadDonationState);
+  const hasDonated = useGameStore((s) => s.hasDonated);
+  const donationPopupSeen = useGameStore((s) => s.donationPopupSeen);
 
   // Load Pacifico font for display text
   const [fontsLoaded] = useFonts({ Pacifico_400Regular });
@@ -35,6 +38,21 @@ export default function App() {
       SplashScreen.hideAsync();
     }
   }, [fontsLoaded]);
+
+  // On app start, load persisted donation state and show popup if needed
+  useEffect(() => {
+    (async () => {
+      try {
+        await loadDonationState();
+        const state = useGameStore.getState();
+        if (!state.hasDonated && !state.donationPopupSeen) {
+          setShowDonationFromFooter(true);
+        }
+      } catch (e) {
+        console.warn('Failed to load donation state on startup', e);
+      }
+    })();
+  }, []);
 
   if (!fontsLoaded) return null;
 

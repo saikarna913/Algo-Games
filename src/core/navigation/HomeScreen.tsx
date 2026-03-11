@@ -35,21 +35,25 @@ export default function HomeScreen({ navigation }: Props) {
   // Show all games on the home screen (including coming-soon entries)
   const visibleGames = GAME_REGISTRY;
 
-  const MIN_CARD_WIDTH = 160;
-  const GRID_PADDING   = 32;
-  const GAP            = 14;
+  // Responsive card sizing: shrink on small phones, grow on tablets
+  const GRID_PADDING = 32;
+  const GAP = 14;
+  const MIN_CARD_WIDTH = width < 420 ? 140 : width > 900 ? 220 : 160;
 
-  const columns   = Math.max(2, Math.floor((width - GRID_PADDING) / (MIN_CARD_WIDTH + GAP)));
-  const cardWidth = (width - GRID_PADDING - GAP * (columns - 1)) / columns;
+  const columns = Math.max(1, Math.floor((width - GRID_PADDING) / (MIN_CARD_WIDTH + GAP)));
+  const cardWidth = Math.max(MIN_CARD_WIDTH, (width - GRID_PADDING - GAP * (columns - 1)) / columns);
+
+  // Soft scale for background orbs so they look good on larger/smaller screens
+  const orbScale = Math.max(0.7, Math.min(width / 420, 1.6));
 
   return (
     <View style={styles.root}>
 
       {/* Blurry orbs — large, soft, low opacity */}
-      <View style={[styles.orb, styles.orbTopLeft]}  pointerEvents="none" />
-      <View style={[styles.orb, styles.orbTopRight]} pointerEvents="none" />
-      <View style={[styles.orb, styles.orbMid]}      pointerEvents="none" />
-      <View style={[styles.orb, styles.orbBottom]}   pointerEvents="none" />
+      <View style={[styles.orb, styles.orbTopLeft, { width: 420 * orbScale, height: 420 * orbScale, top: -180 * orbScale, left: -160 * orbScale }]}  pointerEvents="none" />
+      <View style={[styles.orb, styles.orbTopRight, { width: 340 * orbScale, height: 340 * orbScale, top: -100 * orbScale, right: -120 * orbScale }]} pointerEvents="none" />
+      <View style={[styles.orb, styles.orbMid, { width: 300 * orbScale, height: 300 * orbScale, top: '38%', left: -140 * orbScale }]}      pointerEvents="none" />
+      <View style={[styles.orb, styles.orbBottom, { width: 380 * orbScale, height: 380 * orbScale, bottom: -140 * orbScale, right: -130 * orbScale }]}   pointerEvents="none" />
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}

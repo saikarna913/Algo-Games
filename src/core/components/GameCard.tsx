@@ -59,8 +59,8 @@ function PortalOverlay({ game, visible, onClose, onNavigate }: PortalProps) {
   const a = getAccent(game);
 
   const { width: winW, height: winH } = useWindowDimensions();
-  const PORTAL_W = 310;
-  const PORTAL_H_HALF = 230; // half of the visual portal height used previously
+  const PORTAL_W = Math.min(420, Math.round(winW * 0.9));
+  const PORTAL_H_HALF = Math.round(PORTAL_W * 0.48); // scale portal height in proportion to width
 
   React.useEffect(() => {
     if (!visible) return;
@@ -107,6 +107,8 @@ function PortalOverlay({ game, visible, onClose, onNavigate }: PortalProps) {
             transform: [{ scale: scaleAnim }],
             top: winH / 2 - PORTAL_H_HALF,
             left: winW / 2 - PORTAL_W / 2,
+            width: PORTAL_W,
+            padding: winW < 420 ? 20 : 32,
           },
         ]}
       >
@@ -176,6 +178,11 @@ export default function GameCard({ game, onPress, style }: GameCardProps) {
   const [portalVisible, setPortalVisible] = useState(false);
   const a = getAccent(game);
 
+  const { width: winW } = useWindowDimensions();
+  const providedWidth = style && (style as any).width;
+  const cardW = typeof providedWidth === 'number' ? providedWidth : Math.min(220, Math.max(140, Math.floor(winW / 2) - 24));
+  const iconSize = Math.max(40, Math.min(84, Math.round(cardW * 0.33)));
+
   const handlePressIn = () => {
     Animated.parallel([
       Animated.spring(scaleAnim,  { toValue: 0.92, useNativeDriver: true, speed: 80, bounciness: 2 }),
@@ -230,9 +237,9 @@ export default function GameCard({ game, onPress, style }: GameCardProps) {
 
             {/* Icon area — lightest cream */}
             <View style={styles.iconContainer}>
-              <Animated.Text style={[styles.icon, { transform: [{ translateY: iconBounce }] }]}>
-                {game.icon}
-              </Animated.Text>
+                <Animated.Text style={[styles.icon, { transform: [{ translateY: iconBounce }], fontSize: iconSize }]}> 
+                  {game.icon}
+                </Animated.Text>
             </View>
 
             {/* Bottom bar — accent tint on cream */}
@@ -321,9 +328,6 @@ const styles = StyleSheet.create({
   },
   portalCard: {
     position: 'absolute',
-    top: SCREEN_H * 0.5 - 230,
-    left: SCREEN_W * 0.5 - 155,
-    width: 310,
     backgroundColor: P.creamLt,
     borderRadius: 24,
     borderWidth: 1.5,
