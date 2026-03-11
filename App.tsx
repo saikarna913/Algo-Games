@@ -61,7 +61,7 @@ export default function App() {
             }}
           >
             <Stack.Screen name="Home" component={HomeScreen} />
-            <Stack.Screen name="Game" component={GameScreen} />
+            <Stack.Screen name="Game" component={GameScreen as any} />
           </Stack.Navigator>
         </NavigationContainer>
 
@@ -73,8 +73,7 @@ export default function App() {
         {/* Donation popup triggered from footer donate button */}
         <DonationPopup
           visible={showDonationFromFooter}
-          onDonate={handleDonate}
-          onDismiss={() => setShowDonationFromFooter(false)}
+          onClose={() => setShowDonationFromFooter(false)}
         />
       </View>
     </SafeAreaProvider>

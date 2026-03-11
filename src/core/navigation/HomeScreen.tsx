@@ -62,7 +62,7 @@ export default function HomeScreen({ navigation }: Props) {
               key={game.id}
               game={game}
               onPress={handleGamePress}
-              style={{ width: cardWidth, marginRight: GAP, marginBottom: GAP }}
+              style={{ width: cardWidth, margin: GAP / 2 }}
             />
           ))}
         </View>
@@ -134,5 +134,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginTop: 4,
+    justifyContent: 'center',
   },
 });

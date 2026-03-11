@@ -38,7 +38,7 @@ export interface BipartiteState {
 // ─── Graph Presets ────────────────────────────────────────────────────────────
 // Pre-defined bipartite graphs so both players play on a fair graph.
 
-export const GRAPH_PRESETS: Array<{ nodes: Omit<GraphNode, 'color'>[]; edges: GraphEdge[] }> = [
+export const GRAPH_PRESETS: Array<{ nodes: Omit<GraphNode, 'color'>[]; edges: { from: number; to: number }[] }> = [
   // Preset 0: Simple 6-node bipartite (3+3)
   {
     nodes: [

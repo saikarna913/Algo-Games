@@ -1,12 +1,19 @@
 // src/games/tictactoe/TicTacToeGame.tsx
-import React, { useState, useCallback } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Alert } from 'react-native';
+import React, { useState, useCallback, forwardRef, useImperativeHandle } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Alert, useWindowDimensions, Modal } from 'react-native';
+import GameHeader from '../../core/components/GameHeader';
 import { Colors, FontSize, Spacing, BorderRadius, Shadow } from '../../core/theme';
 import { useGameStore } from '../../core/store';
 import { createInitialState, applyMove, isValidMove, resetState, TicState } from './tictactoeLogic';
 import type { GameScreenProps } from '../registry';
 
-export default function TicTacToeGame({ mode, onGameEnd, onExit }: GameScreenProps) {
+export default forwardRef(function TicTacToeGame(
+  { mode, onGameEnd, onExit, showHeader = true }: GameScreenProps,
+  ref
+) {
+  const [infoVisible, setInfoVisible] = useState(false);
+  const { width, height } = useWindowDimensions();
+  const boardSize = Math.min(width - 48, height * 0.5, 420);
   const [state, setState] = useState<TicState>(() => createInitialState());
   const addScore = useGameStore((s) => s.addScore);
 
@@ -27,6 +34,8 @@ export default function TicTacToeGame({ mode, onGameEnd, onExit }: GameScreenPro
     setState(resetState(state));
   }, [state]);
 
+  useImperativeHandle(ref, () => ({ reset: () => handleReset() }));
+
   const renderCell = (idx: number) => {
     const v = state.board[idx];
     const label = v === 0 ? 'X' : v === 1 ? 'O' : '';
@@ -42,12 +51,11 @@ export default function TicTacToeGame({ mode, onGameEnd, onExit }: GameScreenPro
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onExit} style={styles.backBtn}><Text style={styles.backBtnText}>← Back</Text></TouchableOpacity>
-        <Text style={styles.title}>Tic Tac Toe</Text>
-      </View>
+      {showHeader !== false && (
+        <GameHeader title="Tic Tac Toe" onBack={onExit} onInfo={() => setInfoVisible(true)} />
+      )}
 
-      <View style={styles.board}>
+      <View style={[styles.board, { width: boardSize, height: boardSize }]}>
         {Array.from({ length: 9 }).map((_, i) => renderCell(i))}
       </View>
 
@@ -58,14 +66,26 @@ export default function TicTacToeGame({ mode, onGameEnd, onExit }: GameScreenPro
       <View style={styles.rules}>
         <Text style={styles.rulesText}>Classic 3×3 Tic-Tac-Toe. X = Red, O = Blue. Get three in a row to win.</Text>
       </View>
+
+      <Modal transparent visible={infoVisible} animationType="fade" onRequestClose={() => setInfoVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: 300, backgroundColor: '#fff', borderRadius: 12, padding: 16 }}>
+            <Text style={{ fontWeight: '800', fontSize: 18 }}>Tic Tac Toe</Text>
+            <Text style={{ marginTop: 8 }}>Classic 3×3 Tic-Tac-Toe. X = Red, O = Blue. Get three in a row to win.</Text>
+            <TouchableOpacity onPress={() => setInfoVisible(false)} style={{ marginTop: 12 }}>
+              <Text style={{ color: Colors.coastalBlue, fontWeight: '700' }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: Colors.background,
+    backgroundColor: '#e8ceaa',
     padding: Spacing.base,
     alignItems: 'center',
   },
@@ -77,7 +97,7 @@ const styles = StyleSheet.create({
   },
   backBtn: { paddingRight: Spacing.md },
   backBtnText: { fontSize: FontSize.md, color: Colors.coastalBlue, fontWeight: '600' },
-  title: { flex: 1, textAlign: 'center', fontSize: FontSize.xl, fontWeight: '700', color: Colors.midnightNavy },
+  title: { flex: 1, textAlign: 'center', fontSize: FontSize.xl, fontWeight: '700', color: '#525e75' },
 
   board: {
     width: 300,

@@ -1,6 +1,6 @@
 // src/games/coloring/ColoringGame.tsx
 
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
@@ -8,8 +8,9 @@ import {
   TouchableOpacity,
   ScrollView,
   Modal,
-  Dimensions,
+  useWindowDimensions,
 } from 'react-native';
+import GameHeader from '../../core/components/GameHeader';
 import Svg, { Circle, Line } from 'react-native-svg';
 
 import {
@@ -21,7 +22,7 @@ import {
   generateRandom,
 } from './coloringLogic';
 
-const GRAPH_SIZE = Math.min(Dimensions.get('window').width - 32, 380);
+// GRAPH_SIZE is computed per-device inside component using window dimensions
 
 const GRAPH_FAMILIES = [
   { name: 'Cycle', generator: generateCycle },
@@ -39,7 +40,11 @@ const COLOR_POOL = [
   '#FB8C00',
 ];
 
-export default function ColoringGame() {
+import type { GameScreenProps } from '../registry';
+
+export default forwardRef(function ColoringGame({ mode, onGameEnd, onExit, showHeader = true }: GameScreenProps, ref) {
+  const { width, height } = useWindowDimensions();
+  const GRAPH_SIZE = Math.min(Math.max(220, width - 32), 420, Math.round(height * 0.55));
   const [familyIndex, setFamilyIndex] = useState(0);
   const [size, setSize] = useState(8);
   const [kColors, setKColors] = useState(3);
@@ -61,6 +66,12 @@ export default function ColoringGame() {
     );
   }, [familyIndex, size, kColors]);
 
+  const resetStateHandler = useCallback(() => {
+    setState(createInitialState(GRAPH_FAMILIES[familyIndex].generator, size, kColors));
+  }, [familyIndex, size, kColors]);
+
+  useImperativeHandle(ref, () => ({ reset: () => resetStateHandler() }));
+
   const handleNodePress = useCallback(
     (id: number) => {
       if (state.gameOver) return;
@@ -76,12 +87,9 @@ export default function ColoringGame() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Graph Coloring</Text>
-        <TouchableOpacity onPress={() => setInfoVisible(true)}>
-          <Text style={styles.info}>ℹ️</Text>
-        </TouchableOpacity>
-      </View>
+      {showHeader !== false && (
+        <GameHeader title="Graph Coloring" onBack={() => {}} onInfo={() => setInfoVisible(true)} />
+      )}
 
       <Svg width={GRAPH_SIZE} height={GRAPH_SIZE}>
         {state.edges.map((e, i) => (
@@ -168,7 +176,7 @@ export default function ColoringGame() {
       </TouchableOpacity>
 
       {/* Info Modal */}
-      <Modal visible={infoVisible} transparent animationType="fade">
+      <Modal visible={infoVisible} transparent animationType="fade" onRequestClose={() => setInfoVisible(false)}>
         <View style={styles.modalBg}>
           <View style={styles.modal}>
             <Text style={styles.modalTitle}>Graph Coloring</Text>
@@ -185,7 +193,7 @@ export default function ColoringGame() {
       </Modal>
     </ScrollView>
   );
-}
+});
 
 const styles = StyleSheet.create({
   container: { alignItems: 'center', padding: 20 },

@@ -30,6 +30,8 @@ export default function GameScreen({ navigation, route }: Props) {
   // Look up game in registry (kept for reference but not rendered here)
   const game = getGameById(gameId);
 
+  
+
   // ── Handle game end ───────────────────────────────────────────────────────
   const handleGameEnd = useCallback(
     (winner: string) => {
@@ -47,7 +49,7 @@ export default function GameScreen({ navigation, route }: Props) {
           ? "It's a tie! Brilliant play from both sides."
           : `Congratulations ${winner}! Great game!`,
         [
-          { text: '🔄 Play Again', onPress: () => {} }, // stays on screen, game resets internally
+          { text: '🔄 Play Again', onPress: () => handlePlayAgain() },
           { text: '🏠 Home', onPress: () => navigation.goBack() },
         ]
       );
@@ -71,26 +73,24 @@ export default function GameScreen({ navigation, route }: Props) {
     );
   }
 
-  // Render header + the selected game component
+  // Render header + the selected game component (clean, neutral background)
   const GameComponent = game?.component;
+  const gameRef = React.useRef<any>(null);
+
+  const handlePlayAgain = () => {
+    if (gameRef.current && typeof gameRef.current.reset === 'function') {
+      gameRef.current.reset();
+    }
+  };
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top + 12 }]}> 
-      {/* Decorative orbs to match HomeScreen */}
-      <View style={[styles.orb, styles.orbTopLeft]} pointerEvents="none" />
-      <View style={[styles.orb, styles.orbTopRight]} pointerEvents="none" />
-      <View style={[styles.orb, styles.orbMid]} pointerEvents="none" />
-      <View style={[styles.orb, styles.orbBottom]} pointerEvents="none" />
-
-      <View style={styles.headerRow}>
-        <TouchableOpacity onPress={handleExit} style={styles.backBtn}>
-          <Text style={styles.backText}>← Back</Text>
-        </TouchableOpacity>
-      </View>
-
+    <View style={[styles.container, { paddingTop: insets.top + 8 }]}> 
       {GameComponent ? (
         <View style={{ flex: 1, width: '100%' }}>
-          <GameComponent mode={mode} onGameEnd={handleGameEnd} onExit={handleExit} />
+          {(() => {
+            const Comp: any = GameComponent as any;
+            return <Comp ref={gameRef} mode={mode} showHeader={true} onGameEnd={handleGameEnd} onExit={handleExit} />;
+          })()}
         </View>
       ) : (
         <View style={styles.errorContainer}>
@@ -105,61 +105,24 @@ export default function GameScreen({ navigation, route }: Props) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#e8ceaa',
-  },
-  // Decorative orbs (copied from HomeScreen)
-  orb: {
-    position: 'absolute',
-    borderRadius: 9999,
-  },
-  orbTopLeft: {
-    width: 420,
-    height: 420,
-    top: -180,
-    left: -160,
-    backgroundColor: '#525e75',
-    opacity: 0.14,
-  },
-  orbTopRight: {
-    width: 340,
-    height: 340,
-    top: -100,
-    right: -120,
-    backgroundColor: '#92ba92',
-    opacity: 0.18,
-  },
-  orbMid: {
-    width: 300,
-    height: 300,
-    top: '38%',
-    left: -140,
-    backgroundColor: '#78938a',
-    opacity: 0.13,
-  },
-  orbBottom: {
-    width: 380,
-    height: 380,
-    bottom: -140,
-    right: -130,
-    backgroundColor: '#525e75',
-    opacity: 0.11,
+    backgroundColor: Colors.background,
   },
 
   headerRow: {
+    width: '100%',
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'flex-start',
     paddingHorizontal: 20,
-    marginBottom: 20,
+    paddingVertical: Spacing.sm,
   },
   backBtn: {
-    paddingVertical: 8,
-    paddingHorizontal: 10,
+    paddingRight: Spacing.md,
   },
   backText: {
     fontSize: FontSize.md,
     fontWeight: '700',
-    color: Colors.midnightNavy,
+    color: Colors.coastalBlue,
   },
   errorContainer: {
     flex: 1,

@@ -2,7 +2,7 @@
 // Bipartite Graph Coloring Game — React Native component.
 // Renders an interactive SVG graph where players color nodes.
 
-import React, { useState, useCallback, useRef } from 'react';
+import React, { useState, useCallback, useRef, forwardRef, useImperativeHandle } from 'react';
 import {
   View,
   Text,
@@ -10,9 +10,11 @@ import {
   TouchableOpacity,
   Animated,
   ScrollView,
-  Dimensions,
   Alert,
+  useWindowDimensions,
+  Modal,
 } from 'react-native';
+import GameHeader from '../../core/components/GameHeader';
 import Svg, { Circle, Line, Text as SvgText } from 'react-native-svg';
 import { Colors, FontFamily, FontSize, Spacing, BorderRadius, Shadow } from '../../core/theme';
 import { useGameStore } from '../../core/store';
@@ -26,25 +28,28 @@ import {
 } from './bipartiteLogic';
 import type { GameScreenProps } from '../registry';
 
+
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const GRAPH_SIZE = Math.min(Dimensions.get('window').width - 32, 380);
-const NODE_RADIUS = 22;
-
 const PLAYER_COLORS = {
-  0: Colors.playerRed,    // Red player
-  1: Colors.playerBlue,   // Blue player
+  0: Colors.playerRed, // Red player
+  1: Colors.playerBlue, // Blue player
 };
 
 const PLAYER_LABELS = { 0: 'Red', 1: 'Blue' };
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
-export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenProps) {
+export default forwardRef(function BipartiteGame({ mode, onGameEnd, onExit, showHeader = true }: GameScreenProps, ref) {
+  const [infoVisible, setInfoVisible] = useState(false);
   const [state, setState] = useState<BipartiteState>(() => createInitialState(0));
   const [selectedPreset, setSelectedPreset] = useState(0);
   const [invalidFlash, setInvalidFlash] = useState<number | null>(null); // holds edge id when invalid
   const addScore = useGameStore((s) => s.addScore);
+
+  const { width, height } = useWindowDimensions();
+  const GRAPH_SIZE = Math.min(Math.max(200, width - 32), 420, Math.round(height * 0.6));
+  const NODE_RADIUS = Math.max(10, Math.round(GRAPH_SIZE * 0.055));
 
   // Animated value for the turn indicator pulse
   const pulseAnim = useRef(new Animated.Value(1)).current;
@@ -90,6 +95,8 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
     setState(createInitialState(selectedPreset));
   }, [selectedPreset]);
 
+  useImperativeHandle(ref, () => ({ reset: () => handleReset() }));
+
   // ── Switch preset ───────────────────────────────────────────────────────────
   const handlePresetChange = useCallback((idx: number) => {
     setSelectedPreset(idx);
@@ -112,7 +119,7 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
           const isLastMoved = state.lastMovedEdge === idx;
           const isFlashing = invalidFlash === idx;
 
-          let stroke = Colors.border;
+          let stroke: string = Colors.border;
           let strokeWidth = 2;
           let dash: string | undefined = undefined;
 
@@ -189,13 +196,9 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
   // ── Render ──────────────────────────────────────────────────────────────────
   return (
     <ScrollView contentContainerStyle={styles.container} bounces={false}>
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={onExit} style={styles.backBtn}>
-          <Text style={styles.backBtnText}>← Back</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Bipartite Coloring</Text>
-      </View>
+      {showHeader !== false && (
+        <GameHeader title="Bipartite Coloring" onBack={onExit} onInfo={() => setInfoVisible(true)} />
+      )}
 
       {/* Turn Indicator */}
       {!state.gameOver ? (
@@ -303,9 +306,21 @@ export default function BipartiteGame({ mode, onGameEnd, onExit }: GameScreenPro
           claimed edge. Whoever claims the most edges (largest matching) wins!
         </Text>
       </View>
+
+      <Modal transparent visible={infoVisible} animationType="fade" onRequestClose={() => setInfoVisible(false)}>
+        <View style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center' }}>
+          <View style={{ width: 320, backgroundColor: '#fff', borderRadius: 12, padding: 18 }}>
+            <Text style={{ fontWeight: '800', fontSize: 18, marginBottom: 8 }}>Bipartite Coloring</Text>
+            <Text style={{ marginBottom: 12 }}>Alternate turns claiming unclaimed edges. A node cannot be incident to more than one claimed edge. Whoever claims the most edges (largest matching) wins!</Text>
+            <TouchableOpacity onPress={() => setInfoVisible(false)} style={{ marginTop: 8 }}>
+              <Text style={{ color: '#4A90E2', fontWeight: '700' }}>Close</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
-}
+});
 
 // ─── Styles ───────────────────────────────────────────────────────────────────
 

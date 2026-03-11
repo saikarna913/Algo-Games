@@ -54,6 +54,8 @@ export interface GameScreenProps {
   onGameEnd: (winner: string) => void;
   /** Callback to go back to home */
   onExit: () => void;
+  /** When false, the game should hide its internal header/back button */
+  showHeader?: boolean;
 }
 
 // ─── Lazy-load game components ────────────────────────────────────────────────
