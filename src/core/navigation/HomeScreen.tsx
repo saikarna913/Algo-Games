@@ -38,7 +38,8 @@ export default function HomeScreen({ navigation }: Props) {
   // Responsive card sizing: shrink on small phones, grow on tablets
   const GRID_PADDING = 32;
   const GAP = 14;
-  const MIN_CARD_WIDTH = width < 420 ? 140 : width > 900 ? 220 : 160;
+  // Make cards slightly larger on phones so they read better
+  const MIN_CARD_WIDTH = width < 420 ? 170 : width > 900 ? 220 : 160;
 
   const columns = Math.max(1, Math.floor((width - GRID_PADDING) / (MIN_CARD_WIDTH + GAP)));
   const cardWidth = Math.max(MIN_CARD_WIDTH, (width - GRID_PADDING - GAP * (columns - 1)) / columns);

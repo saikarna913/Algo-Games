@@ -67,6 +67,7 @@ import TicTacToeGame from './tictactoe/TicTacToeGame';
 import BinaryBattleGame from './binaryBattle/BinaryBattleGame';
 import StackAttackGame from './stackAttack/StackAttackGame';
 import SortWarsGame from './sortWars/SortWarsGame';
+import MorrisGame from './morris/MorrisGame';
 
 // ─── Registered Games ─────────────────────────────────────────────────────────
 
@@ -204,6 +205,23 @@ export const GAME_REGISTRY: GamePlugin[] = [
     minPlayers: 2,
     implemented: false,
     component: () => null,
+  },
+
+
+  {
+  id: 'morris',
+  title: "Nine Men's Morris",
+  description:
+    "Place, move, and fly pieces on a 3-ring graph board. Form mills of 3 to remove opponent pieces. A 3000-year-old graph theory puzzle!",
+  tags: ['Graph Theory', 'Adjacency', 'Strategy', 'Classic'],
+  icon: '⬡',
+  difficulty: 3,
+  minPlayers: 2,
+  implemented: true,
+  component: MorrisGame,
+  onGameEnd: (winner, addScore) => {
+    if (winner === 'red' || winner === 'blue') addScore(winner, 1);
+  },
   },
 
 ];

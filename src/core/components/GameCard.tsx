@@ -182,6 +182,7 @@ export default function GameCard({ game, onPress, style }: GameCardProps) {
   const providedWidth = style && (style as any).width;
   const cardW = typeof providedWidth === 'number' ? providedWidth : Math.min(220, Math.max(140, Math.floor(winW / 2) - 24));
   const iconSize = Math.max(40, Math.min(84, Math.round(cardW * 0.33)));
+  const cardH = Math.max(180, Math.round(cardW * 0.55));
 
   const handlePressIn = () => {
     Animated.parallel([
@@ -224,6 +225,7 @@ export default function GameCard({ game, onPress, style }: GameCardProps) {
                 borderColor: animatedBorder,
                 shadowColor: a.accent,
                 shadowOpacity: shadowAnim,
+                height: cardH,
               },
               !game.implemented && styles.disabledCard,
             ]}
