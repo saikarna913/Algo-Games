@@ -56,12 +56,13 @@ export default function HomeScreen({ navigation }: Props) {
       <View style={[styles.orb, styles.orbMid, { width: 300 * orbScale, height: 300 * orbScale, top: '38%', left: -140 * orbScale }]}      pointerEvents="none" />
       <View style={[styles.orb, styles.orbBottom, { width: 380 * orbScale, height: 380 * orbScale, bottom: -140 * orbScale, right: -130 * orbScale }]}   pointerEvents="none" />
 
+      <Header />
+
       <ScrollView
+        style={{ flex: 1 }}
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
-        <Header />
-
         <View style={[styles.grid, { paddingHorizontal: GRID_PADDING / 2 }]}>
           {visibleGames.map((game) => (
             <GameCard
