@@ -1,10 +1,10 @@
 // src/games/morris/MorrisGame.tsx
 // Nine Men's Morris — CS Concept: Graph Theory, Adjacency, Constraint Satisfaction
 
-import React, { useState, useCallback, forwardRef, useImperativeHandle, useEffect, useRef } from 'react';
+import React, { useState, useCallback, forwardRef, useImperativeHandle, useEffect } from 'react';
 import {
   View, Text, StyleSheet, TouchableOpacity,
-  Modal, Animated, Linking, useWindowDimensions,
+  Modal, Linking, useWindowDimensions,
 } from 'react-native';
 import GameHeader from '../../core/components/GameHeader';
 import { useGameStore } from '../../core/store';
@@ -99,19 +99,6 @@ export default forwardRef(function MorrisGame(
   const [infoVisible, setInfoVisible] = useState(false);
   const addScore = useGameStore((s) => s.addScore);
   const { width, height } = useWindowDimensions();
-
-  // Pulse animation for valid targets
-  const pulseAnim = useRef(new Animated.Value(1)).current;
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(pulseAnim, { toValue: 1.35, duration: 550, useNativeDriver: true }),
-        Animated.timing(pulseAnim, { toValue: 1,    duration: 550, useNativeDriver: true }),
-      ])
-    );
-    loop.start();
-    return () => loop.stop();
-  }, []);
 
   const isRed   = state.currentPlayer === 'red';
   const activeCol = isRed ? P.red  : P.blue;
@@ -291,23 +278,6 @@ export default forwardRef(function MorrisGame(
                 zIndex: 2,
               }}
             >
-              {/* Pulse ring for valid targets */}
-              {isValid && !cell && (
-                <Animated.View
-                  style={{
-                    position: 'absolute',
-                    left: -nodeR * 0.4,
-                    top: -nodeR * 0.4,
-                    width: nodeR * 2.8,
-                    height: nodeR * 2.8,
-                    borderRadius: nodeR * 1.4,
-                    borderWidth: 1.5,
-                    borderColor: activeCol + '66',
-                    transform: [{ scale: pulseAnim }],
-                  }}
-                />
-              )}
-
               <View
                 style={{
                   width: nodeR * 2,
