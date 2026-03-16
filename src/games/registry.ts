@@ -62,6 +62,12 @@ import BipartiteGame from './bipartite/BipartiteGame';
 import StonePropagationGame from './stonePropagation/StonePropagationGame';
 import ColoringGame from './Coloring/ColoringGame';
 import TicTacToeGame from './tictactoe/TicTacToeGame';
+import NimGame from './nim/NimGame';
+import TakeAwayGame     from './takeAway/TakeAwayGame';
+import KnightGame       from './knightGame/KnightGame';
+import WythoffGame      from './wythoff/WythoffGame';
+import SubtractSetGame  from './subtractSet/SubtractSetGame';
+import TurningToadsGame from './turningToads/TurningToadsGame';
 
 // ── New CS games ──────────────────────────────────────────────────────────────
 import BinaryBattleGame from './binaryBattle/BinaryBattleGame';
@@ -72,6 +78,73 @@ import MorrisGame from './morris/MorrisGame';
 // ─── Registered Games ─────────────────────────────────────────────────────────
 
 export const GAME_REGISTRY: GamePlugin[] = [
+
+
+   
+{
+  id: 'takeAway',
+  title: 'Take Away',
+  description: 'Remove 1, 2, or 3 stones from a pile. Leave a multiple of 4 to force your opponent to lose!',
+  tags: ['Modular Arithmetic', 'Game Theory', 'Strategy'],
+  icon: '🪨',
+  difficulty: 1,
+  minPlayers: 2,
+  implemented: true,
+  component: TakeAwayGame,
+  onGameEnd: (winner, addScore) => { if (winner === 'red' || winner === 'blue') addScore(winner, 1); },
+},
+ 
+{
+  id: 'knightGame',
+  title: 'Knight Game',
+  description: 'Move a chess knight across the board. Visited cells are blocked. Player who cannot move loses. Uses Grundy numbers!',
+  tags: ['Grundy Numbers', 'DP', 'Chess', 'Graph Theory'],
+  icon: '♞',
+  difficulty: 3,
+  minPlayers: 2,
+  implemented: true,
+  component: KnightGame,
+  onGameEnd: (winner, addScore) => { if (winner === 'red' || winner === 'blue') addScore(winner, 1); },
+},
+ 
+{
+  id: 'wythoff',
+  title: "Wythoff's Game",
+  description: 'Two piles — remove from one or equal amounts from both. Losing positions follow the Golden Ratio!',
+  tags: ['Golden Ratio', 'Game Theory', 'Number Theory'],
+  icon: '𝜑',
+  difficulty: 2,
+  minPlayers: 2,
+  implemented: true,
+  component: WythoffGame,
+  onGameEnd: (winner, addScore) => { if (winner === 'red' || winner === 'blue') addScore(winner, 1); },
+},
+ 
+{
+  id: 'subtractSet',
+  title: 'Subtract-a-Set',
+  description: 'Remove only numbers from a fixed set S. Master the DP table to always win!',
+  tags: ['Dynamic Programming', 'Game Theory', 'DP'],
+  icon: '∈',
+  difficulty: 2,
+  minPlayers: 2,
+  implemented: true,
+  component: SubtractSetGame,
+  onGameEnd: (winner, addScore) => { if (winner === 'red' || winner === 'blue') addScore(winner, 1); },
+},
+ 
+{
+  id: 'turningToads',
+  title: 'Turning Toads',
+  description: 'Red frogs move right, blue frogs move left. Step or jump to fully swap sides — first player stuck loses!',
+  tags: ['Combinatorics', 'Symmetry', 'Game Theory'],
+  icon: '🐸',
+  difficulty: 2,
+  minPlayers: 2,
+  implemented: true,
+  component: TurningToadsGame,
+  onGameEnd: (winner, addScore) => { if (winner === 'red' || winner === 'blue') addScore(winner, 1); },
+},
 
   // ── Game 1: Bipartite Graph Coloring ──────────────────────────────────────
   {
@@ -178,6 +251,21 @@ export const GAME_REGISTRY: GamePlugin[] = [
       if (winner === 'red' || winner === 'blue') addScore(winner, 1);
     },
   },
+  {
+  id: 'nim',
+  title: 'Nim',
+  description:
+    'Remove stones from piles strategically. Master the XOR Nim-Sum to always win — a classic combinatorial game theory challenge.',
+  tags: ['XOR', 'Game Theory', 'Sprague-Grundy', 'Bitwise'],
+  icon: '🪨',
+  difficulty: 2,
+  minPlayers: 2,
+  implemented: true,
+  component: NimGame,
+  onGameEnd: (winner, addScore) => {
+    if (winner === 'red' || winner === 'blue') addScore(winner, 1);
+  },
+},
 
   // ── Coming Soon: Spanning Tree ────────────────────────────────────────────
   {
