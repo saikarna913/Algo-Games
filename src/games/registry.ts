@@ -74,11 +74,25 @@ import BinaryBattleGame from './binaryBattle/BinaryBattleGame';
 import StackAttackGame from './stackAttack/StackAttackGame';
 import SortWarsGame from './sortWars/SortWarsGame';
 import MorrisGame from './morris/MorrisGame';
+import RecognisableMatrixGame from './recognisableMatrix/RecognisableMatrixGame';
 
 // ─── Registered Games ─────────────────────────────────────────────────────────
 
 export const GAME_REGISTRY: GamePlugin[] = [
 
+  // ── Recognisable Matrix ───────────────────────────────────────────────────
+  {
+    id: 'recognisableMatrix',
+    title: 'Recognisable Matrix',
+    description: 'Swap rows and columns to make all diagonal elements 1! Uses bipartite matching theory.',
+    tags: ['Bipartite Matching', 'Graph Theory', 'Linear Algebra'],
+    icon: '🔲',
+    difficulty: 2,
+    minPlayers: 2,
+    implemented: true,
+    component: RecognisableMatrixGame,
+    onGameEnd: (winner, addScore) => { if (winner === 'red' || winner === 'blue') addScore(winner, 1); },
+  },
 
    
 {
